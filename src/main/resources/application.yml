@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: dota-admin-backend
+  # Datasource for local Postgres (matches docker.yml)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dota_admin
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# You can override these values per-profile, e.g. application-dev.yml or
+# by setting SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, etc. in
+# your environment or container.
