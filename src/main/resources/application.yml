@@ -17,3 +17,8 @@ spring:
 # You can override these values per-profile, e.g. application-dev.yml or
 # by setting SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, etc. in
 # your environment or container.
+
+app:
+  jwt:
+    secret: "mySecretKey123456789012345678901234567890123456789012345678901234567890"
+    expiration: 86400000 # 24 hours in milliseconds
