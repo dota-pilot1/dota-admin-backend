@@ -3,6 +3,10 @@ package com.company.dotaadminbackend.application;
 import com.company.dotaadminbackend.domain.model.User;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +61,66 @@ public class UserService {
 
     public boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    public Page<User> findAllUsers(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::convertToUser);
+    }
+
+    public Optional<User> findById(Long id) {
+        return repository.findById(id)
+                .map(this::convertToUser);
+    }
+
+    public User updateUser(Long id, String username, String email) {
+        UserEntity entity = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (username != null && !username.equals(entity.getUsername())) {
+            if (repository.existsByUsername(username)) {
+                throw new IllegalArgumentException("Username already exists");
+            }
+            entity.setUsername(username);
+        }
+
+        if (email != null && !email.equals(entity.getEmail())) {
+            if (repository.existsByEmail(email)) {
+                throw new IllegalArgumentException("Email already exists");
+            }
+            entity.setEmail(email);
+        }
+
+        entity = repository.save(entity);
+        return convertToUser(entity);
+    }
+
+    public void deleteUser(Long id) {
+        if (!repository.existsById(id)) {
+            throw new IllegalArgumentException("User not found");
+        }
+        repository.deleteById(id);
+    }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
+    }
+
+    public User updateCurrentUserProfile(String username, String email) {
+        User currentUser = getCurrentUser();
+        return updateUser(currentUser.getId(), username, email);
+    }
+
+    public boolean isCurrentUser(Long userId) {
+        try {
+            User currentUser = getCurrentUser();
+            return currentUser.getId().equals(userId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private User convertToUser(UserEntity entity) {
