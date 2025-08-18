@@ -50,7 +50,7 @@ public class UserController {
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllUsersWithoutPaging(
-            @RequestParam(defaultValue = "10000") int limit,
+            @RequestParam(defaultValue = "20000") int limit,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         

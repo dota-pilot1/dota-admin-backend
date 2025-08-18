@@ -97,7 +97,7 @@
     <h1>유저 목록 관리 시스템</h1>
     
     <div class="controls">
-        <button onclick="loadUsers(10000)">유저 10000명 로드</button>
+        <button onclick="loadUsers(20000)">유저 20000명 로드</button>
         <button onclick="clearUsers()">초기화</button>
     </div>
     
@@ -114,9 +114,9 @@
     
     <script>
         async function loadUsers(limit) {
-            // 10000개 제한
-            if (limit > 10000) {
-                alert('최대 10000명까지만 로드할 수 있습니다.');
+            // 20000개 제한
+            if (limit > 20000) {
+                alert('최대 20000명까지만 로드할 수 있습니다.');
                 return;
             }
             
@@ -216,9 +216,9 @@
             document.getElementById('total-time').textContent = '0';
         }
         
-        // 페이지 로드시 10000명 자동 로드
+        // 페이지 로드시 20000명 자동 로드
         window.onload = function() {
-            loadUsers(10000);
+            loadUsers(20000);
         };
     </script>
 </body>
