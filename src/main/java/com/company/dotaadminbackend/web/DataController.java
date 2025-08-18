@@ -46,28 +46,47 @@ public class DataController {
             System.out.println("Starting user generation for " + count + " users...");
             long startTime = System.currentTimeMillis();
             
-            List<UserEntity> users = new ArrayList<>();
+            // 기존 유저 수 확인 (시작 시점)
+            long existingCountBefore = userRepository.count();
+            System.out.println("Current user count before generation: " + existingCountBefore);
             
-            // 기존 유저 수 확인
-            long existingCount = userRepository.count();
+            List<UserEntity> users = new ArrayList<>();
             
             // 미리 비밀번호 암호화 (동일한 비밀번호 재사용)
             String encodedPassword = passwordEncoder.encode("password123");
+            
+            // 현재 시간을 기반으로 한 고유 시드 생성
+            long timestamp = System.currentTimeMillis();
             
             // count명의 일반 유저 생성
             for (int i = 1; i <= count; i++) {
                 UserEntity user = new UserEntity();
                 
-                // 고유한 ID 기반 생성 (중복 체크 불필요)
-                long uniqueId = existingCount + i;
+                // 타임스탬프와 기존 유저 수를 조합하여 완전히 고유한 ID 생성
+                long uniqueId = timestamp + existingCountBefore + i;
                 String firstName = firstNames[random.nextInt(firstNames.length)];
                 String lastName = lastNames[random.nextInt(lastNames.length)];
-                String username = firstName + lastName + String.format("%06d", uniqueId);
-                String email = "user" + uniqueId + "@" + domains[random.nextInt(domains.length)];
+                
+                // 더 고유한 username과 email 생성
+                String username = firstName + lastName + "_" + uniqueId;
+                String email = "user_" + uniqueId + "@" + domains[random.nextInt(domains.length)];
+                
+                // 중복 체크 (안전장치)
+                int attempt = 0;
+                while (userRepository.existsByEmail(email) || userRepository.existsByUsername(username)) {
+                    attempt++;
+                    uniqueId = timestamp + existingCountBefore + i + attempt * 1000000L;
+                    username = firstName + lastName + "_" + uniqueId;
+                    email = "user_" + uniqueId + "@" + domains[random.nextInt(domains.length)];
+                    
+                    if (attempt > 100) {
+                        throw new RuntimeException("중복 해결에 실패했습니다. 시스템 관리자에게 문의하세요.");
+                    }
+                }
                 
                 user.setUsername(username);
                 user.setEmail(email);
-                user.setPassword(encodedPassword); // 미리 암호화된 비밀번호 재사용
+                user.setPassword(encodedPassword);
                 user.setRole("USER");
                 
                 users.add(user);
@@ -80,21 +99,29 @@ public class DataController {
 
             System.out.println("Saving users to database...");
             // 배치로 저장
-            userRepository.saveAll(users);
+            List<UserEntity> savedUsers = userRepository.saveAll(users);
+            
+            // 저장 후 유저 수 확인
+            long existingCountAfter = userRepository.count();
+            long actuallyCreated = existingCountAfter - existingCountBefore;
             
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             
             System.out.println("User generation completed in " + duration + "ms");
+            System.out.println("Actually created: " + actuallyCreated + " users");
             
             return ResponseEntity.ok(Map.of(
-                "message", count + "명의 가짜 유저가 생성되었습니다.",
-                "createdCount", count,
-                "totalUsers", userRepository.count(),
+                "message", actuallyCreated + "명의 새로운 유저가 추가로 생성되었습니다.",
+                "requestedCount", count,
+                "actuallyCreated", actuallyCreated,
+                "totalUsersBefore", existingCountBefore,
+                "totalUsersAfter", existingCountAfter,
                 "duration", duration + "ms"
             ));
             
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", "유저 생성 중 오류가 발생했습니다: " + e.getMessage()));
         }
     }
