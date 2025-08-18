@@ -202,7 +202,7 @@
                 
                 console.log(`유저 ${userId} 삭제 완료`);
                 
-            } catch (error) {
+            } catch (error) {cl
                 console.error('유저 삭제 실패:', error);
                 alert('유저 삭제에 실패했습니다: ' + error.message);
             }

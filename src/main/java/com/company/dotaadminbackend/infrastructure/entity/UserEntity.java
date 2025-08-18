@@ -23,4 +23,10 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String role = "USER";
+
+    @Column(unique = true)
+    private String phoneNumber;
+
+    @Column(nullable = false)
+    private boolean kakaoNotificationConsent = false;
 }

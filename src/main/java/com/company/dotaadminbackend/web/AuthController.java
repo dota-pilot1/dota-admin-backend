@@ -35,6 +35,28 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/register-with-kakao")
+    public ResponseEntity<?> registerWithKakao(@RequestBody RegisterWithKakaoRequest request) {
+        try {
+            User user = userService.register(
+                request.username(), 
+                request.password(), 
+                request.email(),
+                request.phoneNumber(),
+                request.kakaoNotificationConsent()
+            );
+            return ResponseEntity.ok(Map.of(
+                "message", "User registered successfully with KakaoTalk notification",
+                "userId", user.getId(),
+                "username", user.getUsername(),
+                "phoneNumber", user.getPhoneNumber(),
+                "kakaoNotificationConsent", user.isKakaoNotificationConsent()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Optional<User> userOpt = userService.findByEmail(request.email());
@@ -61,5 +83,6 @@ public class AuthController {
     }
 
     public record RegisterRequest(String username, String password, String email) {}
+    public record RegisterWithKakaoRequest(String username, String password, String email, String phoneNumber, boolean kakaoNotificationConsent) {}
     public record LoginRequest(String email, String password) {}
 }

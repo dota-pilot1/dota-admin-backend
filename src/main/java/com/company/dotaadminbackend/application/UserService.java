@@ -1,8 +1,10 @@
 package com.company.dotaadminbackend.application;
 
+import com.company.dotaadminbackend.application.event.MemberJoinEvent;
 import com.company.dotaadminbackend.domain.model.User;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -17,13 +19,19 @@ public class UserService {
 
     private final SpringDataUserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public UserService(SpringDataUserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(SpringDataUserRepository repository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     public User register(String username, String password, String email) {
+        return register(username, password, email, null, false);
+    }
+
+    public User register(String username, String password, String email, String phoneNumber, boolean kakaoNotificationConsent) {
         if (repository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -35,10 +43,17 @@ public class UserService {
         entity.setUsername(username);
         entity.setPassword(passwordEncoder.encode(password));
         entity.setEmail(email);
+        entity.setPhoneNumber(phoneNumber);
+        entity.setKakaoNotificationConsent(kakaoNotificationConsent);
         entity.setRole("USER");
         
         entity = repository.save(entity);
-        return convertToUser(entity);
+        User user = convertToUser(entity);
+        
+        // 회원가입 이벤트 발행
+        eventPublisher.publishEvent(new MemberJoinEvent(this, username, email));
+        
+        return user;
     }
 
     public Optional<User> findByUsername(String username) {
@@ -125,6 +140,7 @@ public class UserService {
 
     private User convertToUser(UserEntity entity) {
         return new User(entity.getId(), entity.getUsername(), entity.getPassword(), 
-                       entity.getEmail(), entity.getRole());
+                       entity.getEmail(), entity.getRole(), entity.getPhoneNumber(), 
+                       entity.isKakaoNotificationConsent());
     }
 }

@@ -24,3 +24,25 @@ app:
     expiration: 86400000 # 24 hours in milliseconds
   data:
     load-initial-users: false # Set to true to load initial test users on startup
+
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:your-email@gmail.com} # Gmail 주소
+    password: ${EMAIL_PASSWORD:your-app-password} # Gmail 앱 비밀번호
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+notification:
+  email:
+    admin: ${ADMIN_EMAIL:admin@example.com} # 관리자 이메일
+    enabled: true # 이메일 알림 활성화/비활성화
+
+kakao:
+  api:
+    key: ${KAKAO_API_KEY:} # 카카오 REST API 키 (환경변수에서 설정)
