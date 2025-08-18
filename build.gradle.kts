@@ -42,6 +42,10 @@ dependencies {
 	testImplementation("org.springframework.graphql:spring-graphql-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	// JSP support
+	implementation("org.apache.tomcat.embed:tomcat-embed-jasper")
+	implementation("jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api")
+	implementation("org.glassfish.web:jakarta.servlet.jsp.jstl")
 }
 
 tasks.withType<Test> {
