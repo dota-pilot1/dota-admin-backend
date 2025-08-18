@@ -54,9 +54,9 @@ public class UserController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         
-        // 안전을 위해 최대 5000명으로 제한
-        if (limit > 5000) {
-            limit = 5000;
+        // 안전을 위해 최대 30000명으로 제한
+        if (limit > 30000) {
+            limit = 30000;
         }
         
         Sort sort = sortDir.equalsIgnoreCase("desc") ? 
