@@ -22,3 +22,5 @@ app:
   jwt:
     secret: "mySecretKey123456789012345678901234567890123456789012345678901234567890"
     expiration: 86400000 # 24 hours in milliseconds
+  data:
+    load-initial-users: false # Set to true to load initial test users on startup

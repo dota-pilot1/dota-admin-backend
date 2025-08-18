@@ -2,6 +2,7 @@ package com.company.dotaadminbackend.config;
 
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,9 @@ public class DataLoader implements CommandLineRunner {
     private final SpringDataUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
+    
+    @Value("${app.data.load-initial-users:false}")
+    private boolean loadInitialUsers;
 
     private final String[] firstNames = {
         "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "류", "전",
@@ -38,6 +42,11 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        if (!loadInitialUsers) {
+            System.out.println("Initial user data loading is disabled.");
+            return;
+        }
+        
         if (userRepository.count() == 0) {
             System.out.println("Loading fake user data...");
             loadFakeUsers();
