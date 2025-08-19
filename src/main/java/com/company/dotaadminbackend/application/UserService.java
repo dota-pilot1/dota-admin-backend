@@ -119,14 +119,37 @@ public class UserService {
 
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalArgumentException("No authentication found");
+        }
+        
         String email = authentication.getName();
+        if (email == null || email.equals("anonymousUser")) {
+            throw new IllegalArgumentException("No authenticated user email found");
+        }
+        
         return findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Current user not found: " + email));
     }
 
     public User updateCurrentUserProfile(String username, String email) {
         User currentUser = getCurrentUser();
         return updateUser(currentUser.getId(), username, email);
+    }
+
+    public void deleteCurrentUser(String password) {
+        User currentUser = getCurrentUser();
+        
+        // 비밀번호 검증
+        UserEntity entity = repository.findById(currentUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (!validatePassword(password, entity.getPassword())) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+        
+        // 사용자 삭제
+        repository.deleteById(currentUser.getId());
     }
 
     public boolean isCurrentUser(Long userId) {

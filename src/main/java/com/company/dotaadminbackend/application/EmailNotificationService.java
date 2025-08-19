@@ -33,6 +33,8 @@ public class EmailNotificationService {
     }
 
     public void sendMemberJoinNotification(String newMemberName, String newMemberEmail) {
+        logger.info("이메일 알림 시작 - 활성화 상태: {}, 관리자 이메일: {}", emailEnabled, adminEmail);
+        
         if (!emailEnabled) {
             logger.info("이메일 알림이 비활성화되어 있습니다.");
             return;
@@ -42,13 +44,17 @@ public class EmailNotificationService {
         String content = createWelcomeEmailContent(newMemberName);
         
         // 신규 가입자에게 환영 이메일 발송
-        sendEmail(newMemberEmail, subject, content);
+        boolean emailSent = sendEmail(newMemberEmail, subject, content);
         
-        logger.info("신규 가입자 {}에게 환영 이메일을 발송했습니다.", newMemberEmail);
+        if (emailSent) {
+            logger.info("신규 가입자 {}에게 환영 이메일을 발송했습니다.", newMemberEmail);
+        } else {
+            logger.warn("신규 가입자 {}에게 환영 이메일 발송에 실패했습니다.", newMemberEmail);
+        }
     }
 
 
-    private void sendEmail(String to, String subject, String content) {
+    private boolean sendEmail(String to, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
@@ -58,8 +64,10 @@ public class EmailNotificationService {
             
             mailSender.send(message);
             logger.debug("이메일 발송 성공: {}", to);
+            return true;
         } catch (Exception e) {
             logger.error("이메일 발송 실패: {} - {}", to, e.getMessage());
+            return false;
         }
     }
 

@@ -128,6 +128,17 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/profile")
+    public ResponseEntity<?> deleteCurrentUserProfile(@RequestBody DeleteAccountRequest request) {
+        try {
+            userService.deleteCurrentUser(request.password());
+            return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     public record UpdateUserRequest(String username, String email) {}
     public record UpdateProfileRequest(String username, String email) {}
+    public record DeleteAccountRequest(String password) {}
 }

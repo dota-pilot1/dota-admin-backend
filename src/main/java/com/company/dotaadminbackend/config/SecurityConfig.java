@@ -42,9 +42,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll())
                 .exceptionHandling(exceptions -> exceptions
                         .accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(authenticationEntryPoint));
-                // JWT 필터를 일시적으로 비활성화
-                // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .authenticationEntryPoint(authenticationEntryPoint))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

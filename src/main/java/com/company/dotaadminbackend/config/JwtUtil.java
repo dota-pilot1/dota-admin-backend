@@ -60,6 +60,7 @@ public class JwtUtil {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("JWT validation error: " + e.getMessage());
             return false;
         }
     }
