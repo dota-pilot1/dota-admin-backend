@@ -3,6 +3,8 @@ package com.company.dotaadminbackend.web;
 import com.company.dotaadminbackend.domain.model.User;
 import com.company.dotaadminbackend.application.UserService;
 import com.company.dotaadminbackend.config.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
@@ -23,15 +26,26 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        logger.info("회원가입 요청 - username: {}, email: {}", request.username(), request.email());
+        
         try {
             User user = userService.register(request.username(), request.password(), request.email());
+            logger.info("회원가입 성공 - userId: {}, username: {}, email: {}", user.getId(), user.getUsername(), user.getEmail());
+            
             return ResponseEntity.ok(Map.of(
+                "success", true,
                 "message", "User registered successfully",
                 "userId", user.getId(),
                 "username", user.getUsername()
             ));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            logger.warn("회원가입 실패 - username: {}, email: {}, error: {}", request.username(), request.email(), e.getMessage());
+            
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage(),
+                "error", e.getMessage()
+            ));
         }
     }
 
