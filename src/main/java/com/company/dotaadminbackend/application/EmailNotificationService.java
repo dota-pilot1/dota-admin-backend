@@ -38,33 +38,15 @@ public class EmailNotificationService {
             return;
         }
 
-        List<String> notificationEmails = getNotificationEmails();
+        String subject = "🎉 회원가입을 환영합니다!";
+        String content = createWelcomeEmailContent(newMemberName);
         
-        if (notificationEmails.isEmpty()) {
-            logger.info("알림을 받을 이메일 주소가 없습니다.");
-            return;
-        }
-
-        String subject = "🎉 새로운 회원이 가입했습니다!";
-        String content = createEmailContent(newMemberName, newMemberEmail);
+        // 신규 가입자에게 환영 이메일 발송
+        sendEmail(newMemberEmail, subject, content);
         
-        // 관리자에게 발송
-        sendEmail(adminEmail, subject, content);
-        
-        // 알림 동의한 회원들에게 발송
-        for (String email : notificationEmails) {
-            sendEmail(email, subject, content);
-        }
-        
-        logger.info("{}명에게 회원가입 알림 이메일을 발송했습니다. (관리자 포함)", notificationEmails.size() + 1);
+        logger.info("신규 가입자 {}에게 환영 이메일을 발송했습니다.", newMemberEmail);
     }
 
-    private List<String> getNotificationEmails() {
-        return userRepository.findAll().stream()
-                .filter(user -> user.isKakaoNotificationConsent()) // 알림 동의한 회원
-                .map(user -> user.getEmail())
-                .toList();
-    }
 
     private void sendEmail(String to, String subject, String content) {
         try {
@@ -81,23 +63,24 @@ public class EmailNotificationService {
         }
     }
 
-    private String createEmailContent(String memberName, String memberEmail) {
+    private String createWelcomeEmailContent(String memberName) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         
         return String.format("""
-                안녕하세요!
+                안녕하세요, %s님!
                 
-                새로운 회원이 가입했습니다. 🎉
+                DOTA에 가입해 주셔서 감사합니다! 🎉
                 
-                회원 정보:
-                • 이름: %s
-                • 이메일: %s
+                가입 완료:
                 • 가입시간: %s
+                • 이제 모든 서비스를 이용하실 수 있습니다.
                 
-                관리자 페이지에서 자세한 정보를 확인하실 수 있습니다.
+                궁금한 점이 있으시면 언제든 문의해 주세요.
+                
+                감사합니다.
                 
                 ---
-                DOTA Admin Backend
-                """, memberName, memberEmail, timestamp);
+                DOTA Team
+                """, memberName, timestamp);
     }
 }
