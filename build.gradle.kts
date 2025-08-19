@@ -1,6 +1,5 @@
 plugins {
 	java
-	war
 	id("org.springframework.boot") version "3.5.4"
 	id("io.spring.dependency-management") version "1.1.7"
 }
@@ -51,7 +50,6 @@ dependencies {
 	implementation("org.apache.tomcat.embed:tomcat-embed-jasper")
 	implementation("jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api")
 	implementation("org.glassfish.web:jakarta.servlet.jsp.jstl")
-	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 }
 
 tasks.withType<Test> {
