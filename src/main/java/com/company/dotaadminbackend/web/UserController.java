@@ -30,20 +30,35 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String role) {
         
         Sort sort = sortDir.equalsIgnoreCase("desc") ? 
             Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<User> users = userService.findAllUsers(pageable);
+        Page<User> users;
+        
+        if (role != null && !role.trim().isEmpty()) {
+            users = userService.findUsersByRole(role.toUpperCase(), pageable);
+        } else {
+            users = userService.findAllUsers(pageable);
+        }
+        
+        Long adminCount = userService.countUsersByRole("ADMIN");
+        Long userCount = userService.countUsersByRole("USER");
         
         return ResponseEntity.ok(Map.of(
             "users", users.getContent(),
             "totalElements", users.getTotalElements(),
             "totalPages", users.getTotalPages(),
             "currentPage", users.getNumber(),
-            "size", users.getSize()
+            "size", users.getSize(),
+            "roleCounts", Map.of(
+                "ADMIN", adminCount,
+                "USER", userCount,
+                "TOTAL", adminCount + userCount
+            )
         ));
     }
 
@@ -52,7 +67,8 @@ public class UserController {
     public ResponseEntity<?> getAllUsersWithoutPaging(
             @RequestParam(defaultValue = "20000") int limit,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String role) {
         
         // 안전을 위해 최대 30000명으로 제한
         if (limit > 30000) {
@@ -63,13 +79,27 @@ public class UserController {
             Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(0, limit, sort);
-        Page<User> users = userService.findAllUsers(pageable);
+        Page<User> users;
+        
+        if (role != null && !role.trim().isEmpty()) {
+            users = userService.findUsersByRole(role.toUpperCase(), pageable);
+        } else {
+            users = userService.findAllUsers(pageable);
+        }
+        
+        Long adminCount = userService.countUsersByRole("ADMIN");
+        Long userCount = userService.countUsersByRole("USER");
         
         return ResponseEntity.ok(Map.of(
             "users", users.getContent(),
             "totalElements", users.getTotalElements(),
             "returnedCount", users.getContent().size(),
-            "isComplete", users.getContent().size() < limit
+            "isComplete", users.getContent().size() < limit,
+            "roleCounts", Map.of(
+                "ADMIN", adminCount,
+                "USER", userCount,
+                "TOTAL", adminCount + userCount
+            )
         ));
     }
 

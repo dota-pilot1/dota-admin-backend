@@ -111,6 +111,17 @@ public class UserService {
         return repository.findAll(pageable)
                 .map(this::convertToUser);
     }
+    
+    public Page<User> findUsersByRole(String roleName, Pageable pageable) {
+        RoleEntity roleEntity = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
+        return repository.findByRole(roleEntity, pageable)
+                .map(this::convertToUser);
+    }
+    
+    public Long countUsersByRole(String roleName) {
+        return repository.countByRoleName(roleName);
+    }
 
     public Optional<User> findById(Long id) {
         return repository.findById(id)
