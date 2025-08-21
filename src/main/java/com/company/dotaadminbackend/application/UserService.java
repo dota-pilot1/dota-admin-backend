@@ -1,8 +1,11 @@
 package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.application.event.MemberJoinEvent;
+import com.company.dotaadminbackend.domain.model.Role;
 import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
+import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -18,11 +21,13 @@ import java.util.Optional;
 public class UserService {
 
     private final SpringDataUserRepository repository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
 
-    public UserService(SpringDataUserRepository repository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
+    public UserService(SpringDataUserRepository repository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
     }
@@ -39,13 +44,16 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        RoleEntity userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new IllegalArgumentException("USER role not found"));
+
         UserEntity entity = new UserEntity();
         entity.setUsername(username);
         entity.setPassword(passwordEncoder.encode(password));
         entity.setEmail(email);
         entity.setPhoneNumber(phoneNumber);
         entity.setKakaoNotificationConsent(kakaoNotificationConsent);
-        entity.setRole("USER");
+        entity.setRole(userRole);
         
         entity = repository.save(entity);
         User user = convertToUser(entity);
@@ -54,6 +62,27 @@ public class UserService {
         eventPublisher.publishEvent(new MemberJoinEvent(this, username, email));
         
         return user;
+    }
+
+    public User registerAdmin(String username, String password, String email) {
+        if (repository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        if (repository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        RoleEntity adminRole = roleRepository.findByName("ADMIN")
+                .orElseThrow(() -> new IllegalArgumentException("ADMIN role not found"));
+
+        UserEntity entity = new UserEntity();
+        entity.setUsername(username);
+        entity.setPassword(passwordEncoder.encode(password));
+        entity.setEmail(email);
+        entity.setRole(adminRole);
+        
+        entity = repository.save(entity);
+        return convertToUser(entity);
     }
 
     public Optional<User> findByUsername(String username) {
@@ -162,8 +191,13 @@ public class UserService {
     }
 
     private User convertToUser(UserEntity entity) {
+        Role role = convertToRole(entity.getRole());
         return new User(entity.getId(), entity.getUsername(), entity.getPassword(), 
-                       entity.getEmail(), entity.getRole(), entity.getPhoneNumber(), 
+                       entity.getEmail(), role, entity.getPhoneNumber(), 
                        entity.isKakaoNotificationConsent());
+    }
+
+    private Role convertToRole(RoleEntity roleEntity) {
+        return new Role(roleEntity.getId(), roleEntity.getName(), roleEntity.getDescription());
     }
 }

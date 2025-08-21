@@ -1,6 +1,8 @@
 package com.company.dotaadminbackend.web;
 
+import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
+import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +19,7 @@ import java.util.Random;
 public class DataController {
 
     private final SpringDataUserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
 
@@ -34,8 +37,9 @@ public class DataController {
         "gmail.com", "naver.com", "daum.net", "kakao.com", "yahoo.com", "outlook.com", "hotmail.com"
     };
 
-    public DataController(SpringDataUserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataController(SpringDataUserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -54,6 +58,10 @@ public class DataController {
             
             // 미리 비밀번호 암호화 (동일한 비밀번호 재사용)
             String encodedPassword = passwordEncoder.encode("password123");
+            
+            // USER Role 조회
+            RoleEntity userRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new RuntimeException("USER role not found"));
             
             // 현재 시간을 기반으로 한 고유 시드 생성
             long timestamp = System.currentTimeMillis();
@@ -87,7 +95,7 @@ public class DataController {
                 user.setUsername(username);
                 user.setEmail(email);
                 user.setPassword(encodedPassword);
-                user.setRole("USER");
+                user.setRole(userRole);
                 
                 users.add(user);
                 
@@ -134,11 +142,15 @@ public class DataController {
                 return ResponseEntity.badRequest().body(Map.of("error", "관리자 계정이 이미 존재합니다."));
             }
             
+            // ADMIN Role 조회
+            RoleEntity adminRole = roleRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
+            
             UserEntity admin = new UserEntity();
             admin.setUsername("admin");
             admin.setEmail("admin@example.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setRole("ADMIN");
+            admin.setRole(adminRole);
             
             userRepository.save(admin);
             

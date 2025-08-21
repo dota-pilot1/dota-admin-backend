@@ -14,7 +14,7 @@ public class User {
     @JsonIgnore
     private String password;
     private String email;
-    private String role;
+    private Role role;
     private String phoneNumber;
     private boolean kakaoNotificationConsent;
 }

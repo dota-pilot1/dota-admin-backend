@@ -1,6 +1,8 @@
 package com.company.dotaadminbackend.config;
 
+import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
+import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -15,6 +17,7 @@ import java.util.Random;
 public class DataLoader implements CommandLineRunner {
 
     private final SpringDataUserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
     
@@ -35,8 +38,9 @@ public class DataLoader implements CommandLineRunner {
         "gmail.com", "naver.com", "daum.net", "kakao.com", "yahoo.com", "outlook.com", "hotmail.com"
     };
 
-    public DataLoader(SpringDataUserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataLoader(SpringDataUserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,12 +63,18 @@ public class DataLoader implements CommandLineRunner {
     private void loadFakeUsers() {
         List<UserEntity> users = new ArrayList<>();
         
+        // Role 조회
+        RoleEntity adminRole = roleRepository.findByName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
+        RoleEntity userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER role not found"));
+
         // 관리자 계정 생성
         UserEntity admin = new UserEntity();
         admin.setUsername("admin");
         admin.setEmail("admin@example.com");
         admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setRole("ADMIN");
+        admin.setRole(adminRole);
         users.add(admin);
 
         // 1000명의 일반 유저 생성
@@ -78,7 +88,7 @@ public class DataLoader implements CommandLineRunner {
             user.setUsername(username);
             user.setEmail(generateEmail(username));
             user.setPassword(passwordEncoder.encode("password123"));
-            user.setRole("USER");
+            user.setRole(userRole);
             
             users.add(user);
         }

@@ -85,6 +85,18 @@ public class UserController {
         return ResponseEntity.ok(userOpt.get());
     }
 
+    @GetMapping("/search/email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
+        Optional<User> userOpt = userService.findByEmail(email);
+        
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(userOpt.get());
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {

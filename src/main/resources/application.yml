@@ -21,6 +21,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true  # Role 테이블 마이그레이션을 위해 활성화
   mail:
     host: smtp.gmail.com
     port: 587

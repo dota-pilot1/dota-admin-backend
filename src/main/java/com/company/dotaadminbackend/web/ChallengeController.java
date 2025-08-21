@@ -3,6 +3,9 @@ package com.company.dotaadminbackend.web;
 import com.company.dotaadminbackend.application.ChallengeService;
 import com.company.dotaadminbackend.domain.challenge.Challenge;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
+import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
+import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,21 +25,14 @@ public class ChallengeController {
     }
     
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createChallenge(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> createChallenge(@Valid @RequestBody CreateChallengeRequest request) {
         try {
             Challenge challenge = challengeService.createChallenge(request);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Challenge created successfully");
-            response.put("id", challenge.getId());
-            response.put("title", challenge.getTitle());
-            response.put("author", challenge.getAuthor());
-            response.put("status", challenge.getStatus().name());
-            response.put("startDate", challenge.getStartDate());
-            response.put("endDate", challenge.getEndDate());
-            response.put("rewardAmount", challenge.getRewardAmount());
-            response.put("rewardType", challenge.getRewardType() != null ? challenge.getRewardType().name() : null);
+            response.put("challenge", ChallengeResponse.from(challenge));
             response.put("timestamp", LocalDateTime.now());
             
             return ResponseEntity.ok(response);
@@ -63,7 +59,7 @@ public class ChallengeController {
             .map(challenge -> {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
-                response.put("challenge", buildChallengeResponse(challenge));
+                response.put("challenge", ChallengeResponse.from(challenge));
                 return ResponseEntity.ok(response);
             })
             .orElse(ResponseEntity.notFound().build());
@@ -72,7 +68,7 @@ public class ChallengeController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getChallenges(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String author) {
+            @RequestParam(required = false) String authorId) {
         
         List<Challenge> challenges;
         
@@ -86,14 +82,22 @@ public class ChallengeController {
                 errorResponse.put("message", "Invalid status: " + status);
                 return ResponseEntity.badRequest().body(errorResponse);
             }
-        } else if (author != null) {
-            challenges = challengeService.getChallengesByAuthor(author);
+        } else if (authorId != null) {
+            try {
+                Long parsedAuthorId = Long.valueOf(authorId);
+                challenges = challengeService.getChallengesByAuthor(parsedAuthorId);
+            } catch (NumberFormatException e) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Invalid authorId: must be a valid number");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
         } else {
             challenges = challengeService.getAllChallenges();
         }
         
-        List<Map<String, Object>> challengeResponses = challenges.stream()
-            .map(this::buildChallengeResponse)
+        List<ChallengeResponse> challengeResponses = challenges.stream()
+            .map(ChallengeResponse::from)
             .toList();
             
         Map<String, Object> response = new HashMap<>();
@@ -102,23 +106,5 @@ public class ChallengeController {
         response.put("count", challenges.size());
         
         return ResponseEntity.ok(response);
-    }
-    
-    private Map<String, Object> buildChallengeResponse(Challenge challenge) {
-        Map<String, Object> challengeData = new HashMap<>();
-        challengeData.put("id", challenge.getId());
-        challengeData.put("title", challenge.getTitle());
-        challengeData.put("description", challenge.getDescription());
-        challengeData.put("author", challenge.getAuthor());
-        challengeData.put("tags", challenge.getTags());
-        challengeData.put("participants", challenge.getParticipants());
-        challengeData.put("status", challenge.getStatus().name());
-        challengeData.put("startDate", challenge.getStartDate());
-        challengeData.put("endDate", challenge.getEndDate());
-        challengeData.put("rewardAmount", challenge.getRewardAmount());
-        challengeData.put("rewardType", challenge.getRewardType() != null ? challenge.getRewardType().name() : null);
-        challengeData.put("createdAt", challenge.getCreatedAt());
-        challengeData.put("updatedAt", challenge.getUpdatedAt());
-        return challengeData;
     }
 }

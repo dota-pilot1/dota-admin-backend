@@ -27,8 +27,8 @@ public class Challenge {
     @Column(name = "tag")
     private List<String> tags;
 
-    @Column(nullable = false)
-    private String author; // 나중에 User 엔티티와 연결
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
 
     @Column(name = "reward_amount")
     private Integer rewardAmount;
@@ -39,8 +39,8 @@ public class Challenge {
 
     @ElementCollection
     @CollectionTable(name = "challenge_participants", joinColumns = @JoinColumn(name = "challenge_id"))
-    @Column(name = "participant")
-    private List<String> participants; // 나중에 User 엔티티와 연결
+    @Column(name = "participant_id")
+    private List<Long> participantIds;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -62,11 +62,11 @@ public class Challenge {
 
     protected Challenge() {}
 
-    public Challenge(String title, String description, String author, 
+    public Challenge(String title, String description, Long authorId, 
                     LocalDate startDate, LocalDate endDate) {
         this.title = title;
         this.description = description;
-        this.author = author;
+        this.authorId = authorId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = ChallengeStatus.RECRUITING; // 기본값: 모집중
@@ -98,10 +98,10 @@ public class Challenge {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public List<String> getTags() { return tags; }
-    public String getAuthor() { return author; }
+    public Long getAuthorId() { return authorId; }
     public Integer getRewardAmount() { return rewardAmount; }
     public RewardType getRewardType() { return rewardType; }
-    public List<String> getParticipants() { return participants; }
+    public List<Long> getParticipantIds() { return participantIds; }
     public ChallengeStatus getStatus() { return status; }
     public LocalDate getStartDate() { return startDate; }
     public LocalDate getEndDate() { return endDate; }
@@ -110,5 +110,5 @@ public class Challenge {
 
     // Setters (필요한 것들만)
     public void setTags(List<String> tags) { this.tags = tags; }
-    public void setParticipants(List<String> participants) { this.participants = participants; }
+    public void setParticipantIds(List<Long> participantIds) { this.participantIds = participantIds; }
 }

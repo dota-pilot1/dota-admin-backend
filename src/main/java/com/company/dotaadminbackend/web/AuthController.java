@@ -6,6 +6,7 @@ import com.company.dotaadminbackend.config.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -71,6 +72,33 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/register-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> registerAdmin(@RequestBody RegisterRequest request) {
+        logger.info("관리자 생성 요청 - username: {}, email: {}", request.username(), request.email());
+        
+        try {
+            User user = userService.registerAdmin(request.username(), request.password(), request.email());
+            logger.info("관리자 생성 성공 - userId: {}, username: {}, email: {}", user.getId(), user.getUsername(), user.getEmail());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Admin registered successfully",
+                "userId", user.getId(),
+                "username", user.getUsername(),
+                "role", user.getRole().getName()
+            ));
+        } catch (IllegalArgumentException e) {
+            logger.warn("관리자 생성 실패 - username: {}, email: {}, error: {}", request.username(), request.email(), e.getMessage());
+            
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage(),
+                "error", e.getMessage()
+            ));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Optional<User> userOpt = userService.findByEmail(request.email());
@@ -84,7 +112,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
 
         return ResponseEntity.ok(Map.of(
             "message", "Login successful",
@@ -92,7 +120,7 @@ public class AuthController {
             "userId", user.getId(),
             "username", user.getUsername(),
             "email", user.getEmail(),
-            "role", user.getRole()
+            "role", user.getRole().getName()
         ));
     }
 

@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     List<Challenge> findByStatusOrderByCreatedAtDesc(ChallengeStatus status);
-    List<Challenge> findByAuthorOrderByCreatedAtDesc(String author);
+    List<Challenge> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
     List<Challenge> findAllByOrderByCreatedAtDesc();
 }
