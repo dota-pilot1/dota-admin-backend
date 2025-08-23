@@ -55,3 +55,8 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// Ensure consistent UTF-8 source encoding (prevents BOM / platform default issues)
+tasks.withType<JavaCompile> {
+	options.encoding = "UTF-8"
+}
