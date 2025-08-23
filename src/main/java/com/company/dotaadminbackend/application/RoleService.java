@@ -1,4 +1,4 @@
-package com.company.dotaadminbackend.application;
+﻿package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.domain.model.Role;
 import com.company.dotaadminbackend.domain.role.dto.CreateRoleRequest;
@@ -16,26 +16,26 @@ import java.util.stream.Collectors;
 /**
  * RoleService
  * --------------------------------------------------------------------
- * 역할:
- *  - API / 비즈니스 레이어에서 Role(Entity) CRUD를 수행한다.
- *  - 이미 DB(또는 초기화 로직)에 존재하는 Role 들을 조회/생성/수정/삭제.
+ * ??븷:
+ *  - API / 鍮꾩쫰?덉뒪 ?덉씠?댁뿉??Role(Entity) CRUD瑜??섑뻾?쒕떎.
+ *  - ?대? DB(?먮뒗 珥덇린??濡쒖쭅)??議댁옱?섎뒗 Role ?ㅼ쓣 議고쉶/?앹꽦/?섏젙/??젣.
  *
- * 하지 않는 것(중요):
- *  - "기본(USER / ADMIN 등) 롤 자동 생성" 책임은 여기 없다.
- *      -> 애플리케이션 기동 시 1회 보장되는 seeding 은 bootstrap 패키지의
- *         {@link com.company.dotaadminbackend.bootstrap.RoleInitializer} 가 담당.
- *  - "관리자(ADMIN) 계정 자동 생성" 책임도 없다.
- *      -> {@link com.company.dotaadminbackend.bootstrap.UserInitializer} 참조.
- *  - Authority(권한 코드) 매핑/생성 로직은 현재 이 서비스에 포함되어 있지 않다.
- *      -> 향후 권한 세분화를 재도입하면 별도 Service 나 Initializer / Migration 으로 분리 권장.
+ * ?섏? ?딅뒗 寃?以묒슂):
+ *  - "湲곕낯(USER / ADMIN ?? 濡??먮룞 ?앹꽦" 梨낆엫? ?ш린 ?녿떎.
+ *      -> ?좏뵆由ъ??댁뀡 湲곕룞 ??1??蹂댁옣?섎뒗 seeding ? bootstrap ?⑦궎吏??
+ *         {@link com.company.dotaadminbackend.bootstrap.RoleInitializer} 媛 ?대떦.
+ *  - "愿由ъ옄(ADMIN) 怨꾩젙 ?먮룞 ?앹꽦" 梨낆엫???녿떎.
+ *      -> {@link com.company.dotaadminbackend.bootstrap.UserInitializer} 李몄“.
+ *  - Authority(沅뚰븳 肄붾뱶) 留ㅽ븨/?앹꽦 濡쒖쭅? ?꾩옱 ???쒕퉬?ㅼ뿉 ?ы븿?섏뼱 ?덉? ?딅떎.
+ *      -> ?ν썑 沅뚰븳 ?몃텇?붾? ?щ룄?낇븯硫?蹂꾨룄 Service ??Initializer / Migration ?쇰줈 遺꾨━ 沅뚯옣.
  *
- * 왜 분리했나?
- *  - Seed(초기 데이터 보장) 로직은 "애플리케이션 시작 시 1회" 수행되어야 하며,
- *    일반적인 API 호출 흐름과 구분하지 않으면 중복 생성 / 불필요한 트랜잭션 발생 가능.
- *  - 따라서 CRUD 서비스는 순수하게 요청 기반 동작만 담고, 초기 보장/정책은 bootstrap + UserService(등록 정책) 로 분리.
+ * ??遺꾨━?덈굹?
+ *  - Seed(珥덇린 ?곗씠??蹂댁옣) 濡쒖쭅? "?좏뵆由ъ??댁뀡 ?쒖옉 ??1?? ?섑뻾?섏뼱???섎ŉ,
+ *    ?쇰컲?곸씤 API ?몄텧 ?먮쫫怨?援щ텇?섏? ?딆쑝硫?以묐났 ?앹꽦 / 遺덊븘?뷀븳 ?몃옖??뀡 諛쒖깮 媛??
+ *  - ?곕씪??CRUD ?쒕퉬?ㅻ뒗 ?쒖닔?섍쾶 ?붿껌 湲곕컲 ?숈옉留??닿퀬, 珥덇린 蹂댁옣/?뺤콉? bootstrap + UserService(?깅줉 ?뺤콉) 濡?遺꾨━.
  *
- * createRole 메서드는 단순히 중복 이름 검증 후 Role 을 저장할 뿐,
- * 기본 Role 이 비어 있을 때 자동 채우는 로직을 수행하지 않는다.
+ * createRole 硫붿꽌?쒕뒗 ?⑥닚??以묐났 ?대쫫 寃利???Role ????ν븷 肉?
+ * 湲곕낯 Role ??鍮꾩뼱 ?덉쓣 ???먮룞 梨꾩슦??濡쒖쭅???섑뻾?섏? ?딅뒗??
  */
 @Service
 @Transactional
@@ -68,9 +68,9 @@ public class RoleService {
     }
 
     public Role createRole(CreateRoleRequest request) {
-        // (1) 여기서 하는 일: 동일 이름 Role 존재 여부 검증 -> 신규 Role 저장
-        // (2) 여기서 안 하는 일: 기본 Role(USER/ADMIN) 보장, Authority 매핑 자동생성
-        //     -> 기동 시 seeding 은 RoleInitializer 가 이미 처리. 따라서 여기선 순수 CRUD.
+        // (1) ?ш린???섎뒗 ?? ?숈씪 ?대쫫 Role 議댁옱 ?щ? 寃利?-> ?좉퇋 Role ???
+        // (2) ?ш린?????섎뒗 ?? 湲곕낯 Role(USER/ADMIN) 蹂댁옣, Authority 留ㅽ븨 ?먮룞?앹꽦
+        //     -> 湲곕룞 ??seeding ? RoleInitializer 媛 ?대? 泥섎━. ?곕씪???ш린???쒖닔 CRUD.
         if (roleRepository.existsByName(request.getName())) {
             String msg = "Role with name '" + request.getName() + "' already exists";
             log.warn("[RoleService] {}", msg);
