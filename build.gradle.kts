@@ -60,3 +60,21 @@ tasks.withType<Test> {
 tasks.withType<JavaCompile> {
 	options.encoding = "UTF-8"
 }
+
+// Strip UTF-8 BOM from any accidentally committed source files before compile (defensive)
+val stripBom by tasks.registering {
+	doLast {
+		val targets = fileTree("src") {
+			include("**/*.java", "**/*.kt")
+		}
+		targets.forEach { f ->
+			val bytes = f.readBytes()
+			if (bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
+				f.writeBytes(bytes.copyOfRange(3, bytes.size))
+				println("[stripBom] Stripped BOM: ${f.relativeTo(project.projectDir)}")
+			}
+		}
+	}
+}
+
+tasks.named("compileJava") { dependsOn(stripBom) }
