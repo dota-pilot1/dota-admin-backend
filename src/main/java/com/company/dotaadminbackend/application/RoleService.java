@@ -13,17 +13,14 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * RoleService (clean re-encoded)
- * Responsibilities:
- *  - Pure CRUD over Role entities.
- *  - No automatic seeding or default role creation.
- *  - No authority mapping logic (will be reintroduced later).
- * Separation of concerns:
- *  - Startup seeding: bootstrap/RoleInitializer & bootstrap/UserInitializer.
- *  - Registration-time role selection: UserService (resolveRegistrationRole).
- *  - This service stays minimal so build systems / encoding issues do not affect runtime seeding logic.
- */
+// RoleService
+// ------------------------------------------------------------------
+// Responsibilities:
+//  - Pure CRUD for RoleEntity
+//  - No seeding / no authority mapping logic here
+// Seeding: bootstrap/RoleInitializer & bootstrap/UserInitializer
+// Registration-time role decision: UserService.resolveRegistrationRole
+// Keep comments ASCII to avoid encoding/BOM issues on some servers.
 @Service
 @Transactional
 public class RoleService {
