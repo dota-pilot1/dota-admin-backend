@@ -7,10 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,7 +23,6 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -63,7 +60,6 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllUsersWithoutPaging(
             @RequestParam(defaultValue = "20000") int limit,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -104,7 +100,6 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         Optional<User> userOpt = userService.findById(id);
         
@@ -116,7 +111,6 @@ public class UserController {
     }
 
     @GetMapping("/search/email")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
         Optional<User> userOpt = userService.findByEmail(email);
         
@@ -128,7 +122,6 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
         try {
             User updatedUser = userService.updateUser(id, request.username(), request.email());

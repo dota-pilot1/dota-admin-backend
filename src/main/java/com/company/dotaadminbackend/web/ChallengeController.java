@@ -9,7 +9,6 @@ import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
 import com.company.dotaadminbackend.domain.model.User;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -20,50 +19,47 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/challenges")
 public class ChallengeController {
-    
+
     private final ChallengeService challengeService;
     private final UserService userService;
-    
+
     public ChallengeController(ChallengeService challengeService, UserService userService) {
         this.challengeService = challengeService;
         this.userService = userService;
     }
-    
+
     @PostMapping
-    @PreAuthorize("hasAuthority('CHALLENGE_CREATE')")
     public ResponseEntity<Map<String, Object>> createChallenge(@Valid @RequestBody CreateChallengeRequest request) {
         User currentUser = userService.getCurrentUser();
         Challenge challenge = challengeService.createChallenge(request, currentUser.getId());
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Challenge created successfully");
         response.put("challenge", ChallengeResponse.from(challenge));
         response.put("timestamp", LocalDateTime.now());
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/{challengeId}")
-    @PreAuthorize("hasAuthority('CHALLENGE_VIEW_ALL') or hasAuthority('CHALLENGE_VIEW_OWN')")
     public ResponseEntity<Map<String, Object>> getChallenge(@PathVariable Long challengeId) {
         Challenge challenge = challengeService.getChallengeById(challengeId)
-            .orElseThrow(() -> new IllegalArgumentException("Challenge not found with id: " + challengeId));
-            
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found with id: " + challengeId));
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("challenge", ChallengeResponse.from(challenge));
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping
-    @PreAuthorize("hasAuthority('CHALLENGE_VIEW_ALL')")
     public ResponseEntity<Map<String, Object>> getChallenges(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String authorId) {
-        
+
         List<Challenge> challenges;
-        
+
         if (status != null) {
             try {
                 ChallengeStatus challengeStatus = ChallengeStatus.valueOf(status.toUpperCase());
@@ -81,16 +77,16 @@ public class ChallengeController {
         } else {
             challenges = challengeService.getAllChallenges();
         }
-        
+
         List<ChallengeResponse> challengeResponses = challenges.stream()
-            .map(ChallengeResponse::from)
-            .toList();
-            
+                .map(ChallengeResponse::from)
+                .toList();
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("challenges", challengeResponses);
         response.put("count", challenges.size());
-        
+
         return ResponseEntity.ok(response);
     }
 }

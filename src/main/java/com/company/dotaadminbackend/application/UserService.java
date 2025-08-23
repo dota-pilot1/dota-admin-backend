@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class UserService {
@@ -29,8 +30,12 @@ public class UserService {
     private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    @Value("${app.registration.first-user-admin:true}")
+    private boolean firstUserAdmin;
 
-    public UserService(SpringDataUserRepository repository, RoleRepository roleRepository, AuthorityRepository authorityRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
+    public UserService(SpringDataUserRepository repository, RoleRepository roleRepository,
+            AuthorityRepository authorityRepository, PasswordEncoder passwordEncoder,
+            ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.roleRepository = roleRepository;
         this.authorityRepository = authorityRepository;
@@ -42,7 +47,8 @@ public class UserService {
         return register(username, password, email, null, false);
     }
 
-    public User register(String username, String password, String email, String phoneNumber, boolean kakaoNotificationConsent) {
+    public User register(String username, String password, String email, String phoneNumber,
+            boolean kakaoNotificationConsent) {
         if (repository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -50,8 +56,11 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        RoleEntity userRole = roleRepository.findByName("DEVELOPER")
-                .orElseThrow(() -> new IllegalArgumentException("DEVELOPER role not found"));
+        // Decide which role to assign
+        final String resolvedRoleName = resolveRegistrationRole();
+        RoleEntity userRole = roleRepository.findByName(resolvedRoleName)
+                .orElseGet(() -> roleRepository.findByName("DEVELOPER")
+                        .orElseThrow(() -> new IllegalArgumentException(resolvedRoleName + " role not found")));
 
         UserEntity entity = new UserEntity();
         entity.setUsername(username);
@@ -60,13 +69,13 @@ public class UserService {
         entity.setPhoneNumber(phoneNumber);
         entity.setKakaoNotificationConsent(kakaoNotificationConsent);
         entity.setRole(userRole);
-        
+
         entity = repository.save(entity);
         User user = convertToUser(entity);
-        
+
         // 회원가입 이벤트 발행
         eventPublisher.publishEvent(new MemberJoinEvent(this, username, email));
-        
+
         return user;
     }
 
@@ -86,7 +95,7 @@ public class UserService {
         entity.setPassword(passwordEncoder.encode(password));
         entity.setEmail(email);
         entity.setRole(adminRole);
-        
+
         entity = repository.save(entity);
         return convertToUser(entity);
     }
@@ -117,14 +126,14 @@ public class UserService {
         return repository.findAll(pageable)
                 .map(this::convertToUser);
     }
-    
+
     public Page<User> findUsersByRole(String roleName, Pageable pageable) {
         RoleEntity roleEntity = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
         return repository.findByRole(roleEntity, pageable)
                 .map(this::convertToUser);
     }
-    
+
     public Long countUsersByRole(String roleName) {
         return repository.countByRoleName(roleName);
     }
@@ -180,12 +189,12 @@ public class UserService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("No authentication found");
         }
-        
+
         String email = authentication.getName();
         if (email == null || email.equals("anonymousUser")) {
             throw new SecurityException("No authenticated user email found");
         }
-        
+
         return findByEmail(email)
                 .orElseThrow(() -> new SecurityException("Current user not found: " + email));
     }
@@ -197,15 +206,15 @@ public class UserService {
 
     public void deleteCurrentUser(String password) {
         User currentUser = getCurrentUser();
-        
+
         // 비밀번호 검증
         UserEntity entity = repository.findById(currentUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         if (!validatePassword(password, entity.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
-        
+
         // 사용자 삭제
         repository.deleteById(currentUser.getId());
     }
@@ -221,9 +230,9 @@ public class UserService {
 
     private User convertToUser(UserEntity entity) {
         Role role = convertToRole(entity.getRole());
-        return new User(entity.getId(), entity.getUsername(), entity.getPassword(), 
-                       entity.getEmail(), role, entity.getPhoneNumber(), 
-                       entity.isKakaoNotificationConsent());
+        return new User(entity.getId(), entity.getUsername(), entity.getPassword(),
+                entity.getEmail(), role, entity.getPhoneNumber(),
+                entity.isKakaoNotificationConsent());
     }
 
     private Role convertToRole(RoleEntity roleEntity) {
@@ -231,7 +240,25 @@ public class UserService {
     }
 
     private Authority convertToAuthority(AuthorityEntity authorityEntity) {
-        return new Authority(authorityEntity.getId(), authorityEntity.getName(), 
-                           authorityEntity.getDescription(), authorityEntity.getCategory());
+        return new Authority(authorityEntity.getId(), authorityEntity.getName(),
+                authorityEntity.getDescription(), authorityEntity.getCategory());
+    }
+
+    // Decide which role to assign for a new registration
+    private String resolveRegistrationRole() {
+        String base = "USER"; // default
+        if (!firstUserAdmin) {
+            return base;
+        }
+        try {
+            long total = repository.count();
+            Long adminCountObj = repository.countByRoleName("ADMIN");
+            long adminCount = adminCountObj == null ? 0 : adminCountObj;
+            if (total == 0 || adminCount == 0) {
+                return "ADMIN"; // first user or no admin present
+            }
+        } catch (Exception ignored) {
+        }
+        return base;
     }
 }
