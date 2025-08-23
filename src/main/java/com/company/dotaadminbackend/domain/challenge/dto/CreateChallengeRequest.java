@@ -21,8 +21,6 @@ public class CreateChallengeRequest {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
     
-    @NotNull(message = "Author ID is required")
-    private Long authorId;
     
     private List<String> tags;
     
@@ -32,7 +30,7 @@ public class CreateChallengeRequest {
     private RewardType rewardType;
     
     @NotNull(message = "Start date is required")
-    @Future(message = "Start date must be in the future")
+    @FutureOrPresent(message = "Start date must be today or in the future")
     private LocalDate startDate;
     
     @NotNull(message = "End date is required")

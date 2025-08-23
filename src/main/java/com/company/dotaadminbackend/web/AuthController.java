@@ -1,5 +1,6 @@
 package com.company.dotaadminbackend.web;
 
+import com.company.dotaadminbackend.domain.model.Authority;
 import com.company.dotaadminbackend.domain.model.User;
 import com.company.dotaadminbackend.application.UserService;
 import com.company.dotaadminbackend.config.JwtUtil;
@@ -7,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -104,23 +107,30 @@ public class AuthController {
         Optional<User> userOpt = userService.findByEmail(request.email());
         
         if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         User user = userOpt.get();
         if (!userService.validatePassword(request.password(), user.getPassword())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
+            throw new BadCredentialsException("Invalid credentials");
         }
+
+        // 사용자의 모든 권한 조회
+        List<Authority> userAuthorities = userService.getUserAuthorities(user.getId());
+        List<String> authorityNames = userAuthorities.stream()
+                .map(Authority::getName)
+                .toList();
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
 
         return ResponseEntity.ok(Map.of(
             "message", "Login successful",
             "token", token,
-            "userId", user.getId(),
+            "id", user.getId(),
             "username", user.getUsername(),
             "email", user.getEmail(),
-            "role", user.getRole().getName()
+            "role", user.getRole().getName(),
+            "authorities", authorityNames
         ));
     }
 

@@ -1,10 +1,13 @@
 package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.application.event.MemberJoinEvent;
+import com.company.dotaadminbackend.domain.model.Authority;
 import com.company.dotaadminbackend.domain.model.Role;
 import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.AuthorityEntity;
 import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
+import com.company.dotaadminbackend.infrastructure.adapter.AuthorityRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,12 +26,14 @@ public class UserService {
 
     private final SpringDataUserRepository repository;
     private final RoleRepository roleRepository;
+    private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
 
-    public UserService(SpringDataUserRepository repository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
+    public UserService(SpringDataUserRepository repository, RoleRepository roleRepository, AuthorityRepository authorityRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.roleRepository = roleRepository;
+        this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
     }
@@ -44,8 +50,8 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        RoleEntity userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new IllegalArgumentException("USER role not found"));
+        RoleEntity userRole = roleRepository.findByName("DEVELOPER")
+                .orElseThrow(() -> new IllegalArgumentException("DEVELOPER role not found"));
 
         UserEntity entity = new UserEntity();
         entity.setUsername(username);
@@ -123,6 +129,18 @@ public class UserService {
         return repository.countByRoleName(roleName);
     }
 
+    public List<Authority> getUserAuthorities(Long userId) {
+        List<AuthorityEntity> authorities = authorityRepository.findAllUserAuthorities(userId);
+        return authorities.stream()
+                .map(this::convertToAuthority)
+                .toList();
+    }
+
+    public boolean hasAuthority(Long userId, String authorityName) {
+        return getUserAuthorities(userId).stream()
+                .anyMatch(auth -> auth.getName().equals(authorityName));
+    }
+
     public Optional<User> findById(Long id) {
         return repository.findById(id)
                 .map(this::convertToUser);
@@ -160,16 +178,16 @@ public class UserService {
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalArgumentException("No authentication found");
+            throw new SecurityException("No authentication found");
         }
         
         String email = authentication.getName();
         if (email == null || email.equals("anonymousUser")) {
-            throw new IllegalArgumentException("No authenticated user email found");
+            throw new SecurityException("No authenticated user email found");
         }
         
         return findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Current user not found: " + email));
+                .orElseThrow(() -> new SecurityException("Current user not found: " + email));
     }
 
     public User updateCurrentUserProfile(String username, String email) {
@@ -210,5 +228,10 @@ public class UserService {
 
     private Role convertToRole(RoleEntity roleEntity) {
         return new Role(roleEntity.getId(), roleEntity.getName(), roleEntity.getDescription());
+    }
+
+    private Authority convertToAuthority(AuthorityEntity authorityEntity) {
+        return new Authority(authorityEntity.getId(), authorityEntity.getName(), 
+                           authorityEntity.getDescription(), authorityEntity.getCategory());
     }
 }

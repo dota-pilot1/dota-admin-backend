@@ -27,7 +27,21 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .subject(email)
+                // role claim은 호환성을 위해 유지하지만 실제로는 사용하지 않음
                 .claim("role", roleName)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+    
+    // 간단한 토큰 생성 메서드 (role 없이 email만)
+    public String generateToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .subject(email)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())

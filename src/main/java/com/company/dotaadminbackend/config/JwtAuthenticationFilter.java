@@ -6,6 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.company.dotaadminbackend.application.UserService;
+import com.company.dotaadminbackend.domain.model.Authority;
+import com.company.dotaadminbackend.domain.model.User;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,16 +17,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtUtil jwtUtil;
+    private final ApplicationContext applicationContext;
+    private UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, ApplicationContext applicationContext) {
         this.jwtUtil = jwtUtil;
+        this.applicationContext = applicationContext;
+    }
+    
+    private UserService getUserService() {
+        if (userService == null) {
+            userService = applicationContext.getBean(UserService.class);
+        }
+        return userService;
     }
 
     @Override
@@ -39,18 +54,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 if (jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
-                    String role = jwtUtil.getRoleFromToken(token);
                     
-                    logger.debug("JWT parsed successfully - email: {}, role: {}", email, role);
+                    logger.debug("JWT parsed successfully - email: {}", email);
                     
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        email, 
-                        null, 
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-                    );
-                    
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.debug("Authentication set in SecurityContext for user: {}", email);
+                    try {
+                        UserService userSvc = getUserService();
+                        User user = userSvc.findByEmail(email).orElse(null);
+                        
+                        if (user != null) {
+                            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                            
+                            // DB에서 가져온 실제 Role 사용
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
+                            
+                            // Authority 기반 권한 추가 (DB에서 실시간 조회)
+                            List<Authority> userAuthorities = userSvc.getUserAuthorities(user.getId());
+                            for (Authority authority : userAuthorities) {
+                                authorities.add(new SimpleGrantedAuthority(authority.getName()));
+                            }
+                            
+                            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                email, null, authorities
+                            );
+                            
+                            SecurityContextHolder.getContext().setAuthentication(authToken);
+                            logger.debug("Authentication set in SecurityContext for user: {} with role: {} and {} authorities", 
+                                       email, user.getRole().getName(), authorities.size());
+                        } else {
+                            logger.warn("User not found in database: {}", email);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error loading user from database: {}", e.getMessage());
+                    }
                 } else {
                     logger.warn("JWT token validation failed or expired");
                 }

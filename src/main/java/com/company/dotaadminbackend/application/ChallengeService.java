@@ -20,12 +20,12 @@ public class ChallengeService {
         this.challengeRepository = challengeRepository;
     }
     
-    public Challenge createChallenge(CreateChallengeRequest request) {
+    public Challenge createChallenge(CreateChallengeRequest request, Long authorId) {
         // 도메인 엔티티 생성
         Challenge challenge = new Challenge(
             request.getTitle(), 
             request.getDescription(), 
-            request.getAuthorId(), 
+            authorId, 
             request.getStartDate(), 
             request.getEndDate()
         );

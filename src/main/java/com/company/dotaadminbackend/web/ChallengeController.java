@@ -1,12 +1,15 @@
 package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.ChallengeService;
+import com.company.dotaadminbackend.application.UserService;
 import com.company.dotaadminbackend.domain.challenge.Challenge;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
+import com.company.dotaadminbackend.domain.model.User;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -19,53 +22,42 @@ import java.util.Map;
 public class ChallengeController {
     
     private final ChallengeService challengeService;
+    private final UserService userService;
     
-    public ChallengeController(ChallengeService challengeService) {
+    public ChallengeController(ChallengeService challengeService, UserService userService) {
         this.challengeService = challengeService;
+        this.userService = userService;
     }
     
     @PostMapping
+    @PreAuthorize("hasAuthority('CHALLENGE_CREATE')")
     public ResponseEntity<Map<String, Object>> createChallenge(@Valid @RequestBody CreateChallengeRequest request) {
-        try {
-            Challenge challenge = challengeService.createChallenge(request);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Challenge created successfully");
-            response.put("challenge", ChallengeResponse.from(challenge));
-            response.put("timestamp", LocalDateTime.now());
-            
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", e.getMessage());
-            errorResponse.put("timestamp", LocalDateTime.now());
-            
-            return ResponseEntity.badRequest().body(errorResponse);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Internal server error");
-            errorResponse.put("timestamp", LocalDateTime.now());
-            
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
+        User currentUser = userService.getCurrentUser();
+        Challenge challenge = challengeService.createChallenge(request, currentUser.getId());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Challenge created successfully");
+        response.put("challenge", ChallengeResponse.from(challenge));
+        response.put("timestamp", LocalDateTime.now());
+        
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/{challengeId}")
+    @PreAuthorize("hasAuthority('CHALLENGE_VIEW_ALL') or hasAuthority('CHALLENGE_VIEW_OWN')")
     public ResponseEntity<Map<String, Object>> getChallenge(@PathVariable Long challengeId) {
-        return challengeService.getChallengeById(challengeId)
-            .map(challenge -> {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("challenge", ChallengeResponse.from(challenge));
-                return ResponseEntity.ok(response);
-            })
-            .orElse(ResponseEntity.notFound().build());
+        Challenge challenge = challengeService.getChallengeById(challengeId)
+            .orElseThrow(() -> new IllegalArgumentException("Challenge not found with id: " + challengeId));
+            
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("challenge", ChallengeResponse.from(challenge));
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping
+    @PreAuthorize("hasAuthority('CHALLENGE_VIEW_ALL')")
     public ResponseEntity<Map<String, Object>> getChallenges(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String authorId) {
@@ -77,20 +69,14 @@ public class ChallengeController {
                 ChallengeStatus challengeStatus = ChallengeStatus.valueOf(status.toUpperCase());
                 challenges = challengeService.getChallengesByStatus(challengeStatus);
             } catch (IllegalArgumentException e) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("success", false);
-                errorResponse.put("message", "Invalid status: " + status);
-                return ResponseEntity.badRequest().body(errorResponse);
+                throw new IllegalArgumentException("Invalid status: " + status);
             }
         } else if (authorId != null) {
             try {
                 Long parsedAuthorId = Long.valueOf(authorId);
                 challenges = challengeService.getChallengesByAuthor(parsedAuthorId);
             } catch (NumberFormatException e) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("success", false);
-                errorResponse.put("message", "Invalid authorId: must be a valid number");
-                return ResponseEntity.badRequest().body(errorResponse);
+                throw new IllegalArgumentException("Invalid authorId: must be a valid number");
             }
         } else {
             challenges = challengeService.getAllChallenges();
