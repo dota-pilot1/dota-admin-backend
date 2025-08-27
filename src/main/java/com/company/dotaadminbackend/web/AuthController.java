@@ -1,7 +1,7 @@
 package com.company.dotaadminbackend.web;
 
-import com.company.dotaadminbackend.domain.model.Authority;
-import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.AuthorityEntity;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.application.UserService;
 import com.company.dotaadminbackend.config.JwtUtil;
 import org.slf4j.Logger;
@@ -32,12 +32,12 @@ public class AuthController {
         logger.info("회원가입 요청 - username: {}, email: {}", request.username(), request.email());
         
         try {
-            User user = userService.register(request.username(), request.password(), request.email());
+            UserEntity user = userService.register(request.username(), request.password(), request.email());
             logger.info("회원가입 성공 - userId: {}, username: {}, email: {}", user.getId(), user.getUsername(), user.getEmail());
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "User registered successfully",
+                "message", "UserEntity registered successfully",
                 "userId", user.getId(),
                 "username", user.getUsername()
             ));
@@ -55,7 +55,7 @@ public class AuthController {
     @PostMapping("/register-with-kakao")
     public ResponseEntity<?> registerWithKakao(@RequestBody RegisterWithKakaoRequest request) {
         try {
-            User user = userService.register(
+            UserEntity user = userService.register(
                 request.username(), 
                 request.password(), 
                 request.email(),
@@ -63,7 +63,7 @@ public class AuthController {
                 request.kakaoNotificationConsent()
             );
             return ResponseEntity.ok(Map.of(
-                "message", "User registered successfully with KakaoTalk notification",
+                "message", "UserEntity registered successfully with KakaoTalk notification",
                 "userId", user.getId(),
                 "username", user.getUsername(),
                 "phoneNumber", user.getPhoneNumber(),
@@ -79,7 +79,7 @@ public class AuthController {
         logger.info("관리자 생성 요청 - username: {}, email: {}", request.username(), request.email());
         
         try {
-            User user = userService.registerAdmin(request.username(), request.password(), request.email());
+            UserEntity user = userService.registerAdmin(request.username(), request.password(), request.email());
             logger.info("관리자 생성 성공 - userId: {}, username: {}, email: {}", user.getId(), user.getUsername(), user.getEmail());
             
             return ResponseEntity.ok(Map.of(
@@ -102,21 +102,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<User> userOpt = userService.findByEmail(request.email());
+        Optional<UserEntity> userOpt = userService.findByEmail(request.email());
         
         if (userOpt.isEmpty()) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        User user = userOpt.get();
+        UserEntity user = userOpt.get();
         if (!userService.validatePassword(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
         // 사용자의 모든 권한 조회
-        List<Authority> userAuthorities = userService.getUserAuthorities(user.getId());
+        List<AuthorityEntity> userAuthorities = userService.getUserAuthorities(user.getId());
         List<String> authorityNames = userAuthorities.stream()
-                .map(Authority::getName)
+                .map(AuthorityEntity::getName)
                 .toList();
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());

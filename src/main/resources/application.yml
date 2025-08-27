@@ -26,7 +26,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
-    enabled: true  # Role 테이블 마이그레이션을 위해 활성화
+    enabled: false  # 개발 단계: JPA ddl-auto(update) 사용 위해 비활성화
   mail:
     host: smtp.gmail.com
     port: 587
@@ -76,4 +76,48 @@ logging:
   "org.springframework.security": INFO  # 필요한 경우 DEBUG
   "org.hibernate.SQL": DEBUG            # 실행되는 SQL 확인
   "org.hibernate.type.descriptor.sql.BasicBinder": TRACE # 바인드 파라미터
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dota_admin_dev
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  flyway:
+    enabled: false
+
+server:
+  port: 8081
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:myDevSecretKey}
+    expiration: 3600000 # 1 hour in milliseconds
+  data:
+    load-initial-users: true # Set to true to load initial test users on startup
+  roles:
+    autocreate: true
+  users:
+    autocreate: true
+    admin:
+      username: ${APP_USERS_ADMIN_USERNAME:devadmin}
+      email: ${APP_USERS_ADMIN_EMAIL:devadmin@daum.net}
+      password: ${APP_USERS_ADMIN_PASSWORD:devpassword}
+  registration:
+    first-user-admin: true
+
+logging:
+  level:
+    root: DEBUG
+  "com.company.dotaadminbackend": DEBUG
+  "org.springframework.security": DEBUG
+  "org.hibernate.SQL": DEBUG
+  "org.hibernate.type.descriptor.sql.BasicBinder": TRACE
 

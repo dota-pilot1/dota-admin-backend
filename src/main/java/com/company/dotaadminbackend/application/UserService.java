@@ -1,9 +1,6 @@
 package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.application.event.MemberJoinEvent;
-import com.company.dotaadminbackend.domain.model.Authority;
-import com.company.dotaadminbackend.domain.model.Role;
-import com.company.dotaadminbackend.domain.model.User;
 import com.company.dotaadminbackend.infrastructure.entity.AuthorityEntity;
 import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
@@ -43,11 +40,11 @@ public class UserService {
         this.eventPublisher = eventPublisher;
     }
 
-    public User register(String username, String password, String email) {
+    public UserEntity register(String username, String password, String email) {
         return register(username, password, email, null, false);
     }
 
-    public User register(String username, String password, String email, String phoneNumber,
+    public UserEntity register(String username, String password, String email, String phoneNumber,
             boolean kakaoNotificationConsent) {
         if (repository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
@@ -71,15 +68,14 @@ public class UserService {
         entity.setRole(userRole);
 
         entity = repository.save(entity);
-        User user = convertToUser(entity);
 
         // 회원가입 이벤트 발행
         eventPublisher.publishEvent(new MemberJoinEvent(this, username, email));
 
-        return user;
+        return entity;
     }
 
-    public User registerAdmin(String username, String password, String email) {
+    public UserEntity registerAdmin(String username, String password, String email) {
         if (repository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -96,52 +92,48 @@ public class UserService {
         entity.setEmail(email);
         entity.setRole(adminRole);
 
-        entity = repository.save(entity);
-        return convertToUser(entity);
+        return repository.save(entity);
     }
 
-    public Optional<User> findByUsername(String username) {
+    public Optional<UserEntity> findByUsername(String username) {
         return repository.findByUsername(username)
-                .map(this::convertToUser);
+;
     }
 
-    public Optional<User> findByEmail(String email) {
+    public Optional<UserEntity> findByEmail(String email) {
         return repository.findByEmail(email)
-                .map(this::convertToUser);
+;
     }
 
-    public Optional<User> findByLoginId(String loginId) {
+    public Optional<UserEntity> findByLoginId(String loginId) {
         Optional<UserEntity> userEntity = repository.findByUsername(loginId);
         if (userEntity.isEmpty()) {
             userEntity = repository.findByEmail(loginId);
         }
-        return userEntity.map(this::convertToUser);
+        return userEntity;
     }
 
     public boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
-    public Page<User> findAllUsers(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(this::convertToUser);
+    public Page<UserEntity> findAllUserEntitys(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
-    public Page<User> findUsersByRole(String roleName, Pageable pageable) {
+    public Page<UserEntity> findUserEntitysByRole(String roleName, Pageable pageable) {
         RoleEntity roleEntity = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
-        return repository.findByRole(roleEntity, pageable)
-                .map(this::convertToUser);
+        return repository.findByRole(roleEntity, pageable);
     }
 
-    public Long countUsersByRole(String roleName) {
+    public Long countUserEntitysByRole(String roleName) {
         return repository.countByRoleName(roleName);
     }
 
-    public List<Authority> getUserAuthorities(Long userId) {
+    public List<AuthorityEntity> getUserAuthorities(Long userId) {
         List<AuthorityEntity> authorities = authorityRepository.findAllUserAuthorities(userId);
         return authorities.stream()
-                .map(this::convertToAuthority)
                 .toList();
     }
 
@@ -150,14 +142,14 @@ public class UserService {
                 .anyMatch(auth -> auth.getName().equals(authorityName));
     }
 
-    public Optional<User> findById(Long id) {
+    public Optional<UserEntity> findById(Long id) {
         return repository.findById(id)
-                .map(this::convertToUser);
+;
     }
 
-    public User updateUser(Long id, String username, String email) {
+    public UserEntity updateUserEntity(Long id, String username, String email) {
         UserEntity entity = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("UserEntity not found"));
 
         if (username != null && !username.equals(entity.getUsername())) {
             if (repository.existsByUsername(username)) {
@@ -173,25 +165,24 @@ public class UserService {
             entity.setEmail(email);
         }
 
-        entity = repository.save(entity);
-        return convertToUser(entity);
+        return repository.save(entity);
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUserEntity(Long id) {
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("User not found");
+            throw new IllegalArgumentException("UserEntity not found");
         }
         repository.deleteById(id);
     }
 
-    public User getCurrentUser() {
+    public UserEntity getCurrentUserEntity() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("No authentication found");
         }
 
         String email = authentication.getName();
-        if (email == null || email.equals("anonymousUser")) {
+        if (email == null || email.equals("anonymousUserEntity")) {
             throw new SecurityException("No authenticated user email found");
         }
 
@@ -199,50 +190,35 @@ public class UserService {
                 .orElseThrow(() -> new SecurityException("Current user not found: " + email));
     }
 
-    public User updateCurrentUserProfile(String username, String email) {
-        User currentUser = getCurrentUser();
-        return updateUser(currentUser.getId(), username, email);
+    public UserEntity updateCurrentUserEntityProfile(String username, String email) {
+        UserEntity currentUserEntity = getCurrentUserEntity();
+        return updateUserEntity(currentUserEntity.getId(), username, email);
     }
 
-    public void deleteCurrentUser(String password) {
-        User currentUser = getCurrentUser();
+    public void deleteCurrentUserEntity(String password) {
+        UserEntity currentUserEntity = getCurrentUserEntity();
 
         // 비밀번호 검증
-        UserEntity entity = repository.findById(currentUser.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        UserEntity entity = repository.findById(currentUserEntity.getId())
+                .orElseThrow(() -> new IllegalArgumentException("UserEntity not found"));
 
         if (!validatePassword(password, entity.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
 
         // 사용자 삭제
-        repository.deleteById(currentUser.getId());
+        repository.deleteById(currentUserEntity.getId());
     }
 
-    public boolean isCurrentUser(Long userId) {
+    public boolean isCurrentUserEntity(Long userId) {
         try {
-            User currentUser = getCurrentUser();
-            return currentUser.getId().equals(userId);
+            UserEntity currentUserEntity = getCurrentUserEntity();
+            return currentUserEntity.getId().equals(userId);
         } catch (Exception e) {
             return false;
         }
     }
 
-    private User convertToUser(UserEntity entity) {
-        Role role = convertToRole(entity.getRole());
-        return new User(entity.getId(), entity.getUsername(), entity.getPassword(),
-                entity.getEmail(), role, entity.getPhoneNumber(),
-                entity.isKakaoNotificationConsent());
-    }
-
-    private Role convertToRole(RoleEntity roleEntity) {
-        return new Role(roleEntity.getId(), roleEntity.getName(), roleEntity.getDescription());
-    }
-
-    private Authority convertToAuthority(AuthorityEntity authorityEntity) {
-        return new Authority(authorityEntity.getId(), authorityEntity.getName(),
-                authorityEntity.getDescription(), authorityEntity.getCategory());
-    }
 
     // Decide which role to assign for a new registration
     private String resolveRegistrationRole() {

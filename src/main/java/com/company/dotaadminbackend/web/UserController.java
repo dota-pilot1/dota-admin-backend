@@ -1,6 +1,6 @@
 package com.company.dotaadminbackend.web;
 
-import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.application.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +23,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllUsers(
+    public ResponseEntity<?> getAllUserEntitys(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -34,16 +34,16 @@ public class UserController {
             Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<User> users;
+        Page<UserEntity> users;
         
         if (role != null && !role.trim().isEmpty()) {
-            users = userService.findUsersByRole(role.toUpperCase(), pageable);
+            users = userService.findUserEntitysByRole(role.toUpperCase(), pageable);
         } else {
-            users = userService.findAllUsers(pageable);
+            users = userService.findAllUserEntitys(pageable);
         }
         
-        Long adminCount = userService.countUsersByRole("ADMIN");
-        Long userCount = userService.countUsersByRole("USER");
+        Long adminCount = userService.countUserEntitysByRole("ADMIN");
+        Long userCount = userService.countUserEntitysByRole("USER");
         
         return ResponseEntity.ok(Map.of(
             "users", users.getContent(),
@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllUsersWithoutPaging(
+    public ResponseEntity<?> getAllUserEntitysWithoutPaging(
             @RequestParam(defaultValue = "20000") int limit,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
@@ -75,16 +75,16 @@ public class UserController {
             Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         
         Pageable pageable = PageRequest.of(0, limit, sort);
-        Page<User> users;
+        Page<UserEntity> users;
         
         if (role != null && !role.trim().isEmpty()) {
-            users = userService.findUsersByRole(role.toUpperCase(), pageable);
+            users = userService.findUserEntitysByRole(role.toUpperCase(), pageable);
         } else {
-            users = userService.findAllUsers(pageable);
+            users = userService.findAllUserEntitys(pageable);
         }
         
-        Long adminCount = userService.countUsersByRole("ADMIN");
-        Long userCount = userService.countUsersByRole("USER");
+        Long adminCount = userService.countUserEntitysByRole("ADMIN");
+        Long userCount = userService.countUserEntitysByRole("USER");
         
         return ResponseEntity.ok(Map.of(
             "users", users.getContent(),
@@ -100,8 +100,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        Optional<User> userOpt = userService.findById(id);
+    public ResponseEntity<?> getUserEntityById(@PathVariable Long id) {
+        Optional<UserEntity> userOpt = userService.findById(id);
         
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -111,8 +111,8 @@ public class UserController {
     }
 
     @GetMapping("/search/email")
-    public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
-        Optional<User> userOpt = userService.findByEmail(email);
+    public ResponseEntity<?> getUserEntityByEmail(@RequestParam String email) {
+        Optional<UserEntity> userOpt = userService.findByEmail(email);
         
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -122,12 +122,12 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<?> updateUserEntity(@PathVariable Long id, @RequestBody UpdateUserEntityRequest request) {
         try {
-            User updatedUser = userService.updateUser(id, request.username(), request.email());
+            UserEntity updatedUserEntity = userService.updateUserEntity(id, request.username(), request.email());
             return ResponseEntity.ok(Map.of(
-                "message", "User updated successfully",
-                "user", updatedUser
+                "message", "UserEntity updated successfully",
+                "user", updatedUserEntity
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -135,28 +135,28 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUserEntity(@PathVariable Long id) {
         try {
-            userService.deleteUser(id);
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+            userService.deleteUserEntity(id);
+            return ResponseEntity.ok(Map.of("message", "UserEntity deleted successfully"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getCurrentUserProfile() {
-        User currentUser = userService.getCurrentUser();
-        return ResponseEntity.ok(currentUser);
+    public ResponseEntity<?> getCurrentUserEntityProfile() {
+        UserEntity currentUserEntity = userService.getCurrentUserEntity();
+        return ResponseEntity.ok(currentUserEntity);
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateCurrentUserProfile(@RequestBody UpdateProfileRequest request) {
+    public ResponseEntity<?> updateCurrentUserEntityProfile(@RequestBody UpdateProfileRequest request) {
         try {
-            User updatedUser = userService.updateCurrentUserProfile(request.username(), request.email());
+            UserEntity updatedUserEntity = userService.updateCurrentUserEntityProfile(request.username(), request.email());
             return ResponseEntity.ok(Map.of(
                 "message", "Profile updated successfully",
-                "user", updatedUser
+                "user", updatedUserEntity
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -164,16 +164,16 @@ public class UserController {
     }
 
     @DeleteMapping("/profile")
-    public ResponseEntity<?> deleteCurrentUserProfile(@RequestBody DeleteAccountRequest request) {
+    public ResponseEntity<?> deleteCurrentUserEntityProfile(@RequestBody DeleteAccountRequest request) {
         try {
-            userService.deleteCurrentUser(request.password());
+            userService.deleteCurrentUserEntity(request.password());
             return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    public record UpdateUserRequest(String username, String email) {}
+    public record UpdateUserEntityRequest(String username, String email) {}
     public record UpdateProfileRequest(String username, String email) {}
     public record DeleteAccountRequest(String password) {}
 }

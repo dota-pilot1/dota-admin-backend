@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.company.dotaadminbackend.application.UserService;
-import com.company.dotaadminbackend.domain.model.Authority;
-import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.AuthorityEntity;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     
                     try {
                         UserService userSvc = getUserService();
-                        User user = userSvc.findByEmail(email).orElse(null);
+                        UserEntity user = userSvc.findByEmail(email).orElse(null);
                         
                         if (user != null) {
                             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
@@ -67,9 +67,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             // DB에서 가져온 실제 Role 사용
                             authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
                             
-                            // Authority 기반 권한 추가 (DB에서 실시간 조회)
-                            List<Authority> userAuthorities = userSvc.getUserAuthorities(user.getId());
-                            for (Authority authority : userAuthorities) {
+                            // AuthorityEntity 기반 권한 추가 (DB에서 실시간 조회)
+                            List<AuthorityEntity> userAuthorities = userSvc.getUserAuthorities(user.getId());
+                            for (AuthorityEntity authority : userAuthorities) {
                                 authorities.add(new SimpleGrantedAuthority(authority.getName()));
                             }
                             
@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             logger.debug("Authentication set in SecurityContext for user: {} with role: {} and {} authorities", 
                                        email, user.getRole().getName(), authorities.size());
                         } else {
-                            logger.warn("User not found in database: {}", email);
+                            logger.warn("UserEntity not found in database: {}", email);
                         }
                     } catch (Exception e) {
                         logger.error("Error loading user from database: {}", e.getMessage());

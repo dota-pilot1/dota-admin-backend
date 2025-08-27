@@ -18,7 +18,7 @@ public class Challenge {
 
     @Column(nullable = false)
     private String title;
-    
+
     @Column(length = 1000)
     private String description;
 
@@ -32,7 +32,7 @@ public class Challenge {
 
     @Column(name = "reward_amount")
     private Integer rewardAmount;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "reward_type")
     private RewardType rewardType;
@@ -62,7 +62,7 @@ public class Challenge {
 
     protected Challenge() {}
 
-    public Challenge(String title, String description, Long authorId, 
+    public Challenge(String title, String description, Long authorId,
                     LocalDate startDate, LocalDate endDate) {
         this.title = title;
         this.description = description;

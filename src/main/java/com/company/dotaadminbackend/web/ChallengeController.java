@@ -6,7 +6,7 @@ import com.company.dotaadminbackend.domain.challenge.Challenge;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
-import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +30,8 @@ public class ChallengeController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createChallenge(@Valid @RequestBody CreateChallengeRequest request) {
-        User currentUser = userService.getCurrentUser();
-        Challenge challenge = challengeService.createChallenge(request, currentUser.getId());
+        UserEntity currentUserEntity = userService.getCurrentUserEntity();
+        Challenge challenge = challengeService.createChallenge(request, currentUserEntity.getId());
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

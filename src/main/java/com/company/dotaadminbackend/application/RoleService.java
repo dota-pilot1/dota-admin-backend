@@ -1,4 +1,4 @@
-﻿package com.company.dotaadminbackend.application;
+package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.domain.model.Role;
 import com.company.dotaadminbackend.domain.role.dto.CreateRoleRequest;

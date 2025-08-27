@@ -1,6 +1,6 @@
 package com.company.dotaadminbackend.application;
 
-import com.company.dotaadminbackend.domain.model.User;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import okhttp3.*;
 import org.slf4j.Logger;

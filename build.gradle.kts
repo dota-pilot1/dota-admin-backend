@@ -18,6 +18,13 @@ repositories {
 	mavenCentral()
 }
 
+// Development-only configuration for tools like DevTools (excluded from production builds)
+configurations {
+	named("runtimeClasspath") {
+		extendsFrom(configurations.getByName("developmentOnly"))
+	}
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-graphql")
@@ -50,6 +57,8 @@ dependencies {
 	implementation("org.apache.tomcat.embed:tomcat-embed-jasper")
 	implementation("jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api")
 	implementation("org.glassfish.web:jakarta.servlet.jsp.jstl")
+	// Dev tools (auto restart, LiveReload) - active only in IDE / not packaged in final jar
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 tasks.withType<Test> {
