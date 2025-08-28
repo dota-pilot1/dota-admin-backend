@@ -1,23 +1,30 @@
 package com.company.dotaadminbackend.application;
 
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
+import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
+import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
+import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
+import com.company.dotaadminbackend.domain.challenge.dto.ParticipantResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class ChallengeService {
     
     private final ChallengeRepository challengeRepository;
+    private final SpringDataUserRepository userRepository;
     
-    public ChallengeService(ChallengeRepository challengeRepository) {
+    public ChallengeService(ChallengeRepository challengeRepository, SpringDataUserRepository userRepository) {
         this.challengeRepository = challengeRepository;
+        this.userRepository = userRepository;
     }
     
     public ChallengeEntity createChallenge(CreateChallengeRequest request, Long authorId) {
@@ -87,5 +94,37 @@ public class ChallengeService {
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
         
         return challenge.isParticipant(userId);
+    }
+    
+    // Helper method to convert ChallengeEntity to ChallengeResponse with participant details
+    @Transactional(readOnly = true)
+    public ChallengeResponse toChallengeResponse(ChallengeEntity challenge) {
+        ChallengeResponse response = ChallengeResponse.from(challenge);
+        
+        // Fetch author name
+        Optional<UserEntity> author = userRepository.findById(challenge.getAuthorId());
+        if (author.isPresent()) {
+            response.setAuthor(author.get().getUsername());
+        }
+        
+        // Fetch participant details
+        List<ParticipantResponse> participants = challenge.getParticipantIds().stream()
+                .map(participantId -> {
+                    Optional<UserEntity> user = userRepository.findById(participantId);
+                    return user.map(ParticipantResponse::from).orElse(null);
+                })
+                .filter(participant -> participant != null)
+                .collect(Collectors.toList());
+        
+        response.setParticipants(participants);
+        return response;
+    }
+    
+    @Transactional(readOnly = true)
+    public List<ChallengeResponse> getAllChallengesWithParticipants() {
+        List<ChallengeEntity> challenges = challengeRepository.findAllByOrderByCreatedAtDesc();
+        return challenges.stream()
+                .map(this::toChallengeResponse)
+                .collect(Collectors.toList());
     }
 }

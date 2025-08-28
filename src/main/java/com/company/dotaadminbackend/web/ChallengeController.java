@@ -58,34 +58,36 @@ public class ChallengeController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String authorId) {
 
-        List<ChallengeEntity> challenges;
+        List<ChallengeResponse> challengeResponses;
 
         if (status != null) {
             try {
                 ChallengeStatus challengeStatus = ChallengeStatus.valueOf(status.toUpperCase());
-                challenges = challengeService.getChallengesByStatus(challengeStatus);
+                List<ChallengeEntity> challenges = challengeService.getChallengesByStatus(challengeStatus);
+                challengeResponses = challenges.stream()
+                        .map(challengeService::toChallengeResponse)
+                        .toList();
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid status: " + status);
             }
         } else if (authorId != null) {
             try {
                 Long parsedAuthorId = Long.valueOf(authorId);
-                challenges = challengeService.getChallengesByAuthor(parsedAuthorId);
+                List<ChallengeEntity> challenges = challengeService.getChallengesByAuthor(parsedAuthorId);
+                challengeResponses = challenges.stream()
+                        .map(challengeService::toChallengeResponse)
+                        .toList();
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid authorId: must be a valid number");
             }
         } else {
-            challenges = challengeService.getAllChallenges();
+            challengeResponses = challengeService.getAllChallengesWithParticipants();
         }
-
-        List<ChallengeResponse> challengeResponses = challenges.stream()
-                .map(ChallengeResponse::from)
-                .toList();
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("challenges", challengeResponses);
-        response.put("count", challenges.size());
+        response.put("count", challengeResponses.size());
 
         return ResponseEntity.ok(response);
     }

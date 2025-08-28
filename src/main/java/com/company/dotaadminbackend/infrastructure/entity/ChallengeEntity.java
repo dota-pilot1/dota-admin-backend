@@ -118,9 +118,6 @@ public class ChallengeEntity {
         if (!canParticipate()) {
             throw new IllegalStateException("Cannot participate in this challenge");
         }
-        if (isAuthor(userId)) {
-            throw new IllegalStateException("Author cannot participate in their own challenge");
-        }
         if (isParticipant(userId)) {
             throw new IllegalStateException("User is already participating in this challenge");
         }
@@ -130,6 +127,7 @@ public class ChallengeEntity {
         }
         participantIds.add(userId);
     }
+
 
     public void removeParticipant(Long userId) {
         if (participantIds != null) {
