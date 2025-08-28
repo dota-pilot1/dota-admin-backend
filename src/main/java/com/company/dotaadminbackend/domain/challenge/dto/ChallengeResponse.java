@@ -1,6 +1,6 @@
 package com.company.dotaadminbackend.domain.challenge.dto;
 
-import com.company.dotaadminbackend.domain.challenge.Challenge;
+import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.reward.RewardType;
 import lombok.Data;
@@ -30,7 +30,7 @@ public class ChallengeResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
-    public static ChallengeResponse from(Challenge challenge) {
+    public static ChallengeResponse from(ChallengeEntity challenge) {
         return new ChallengeResponse(
             challenge.getId(),
             challenge.getTitle(),

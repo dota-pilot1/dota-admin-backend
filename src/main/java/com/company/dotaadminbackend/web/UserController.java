@@ -145,8 +145,8 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getCurrentUserEntityProfile() {
-        UserEntity currentUserEntity = userService.getCurrentUserEntity();
+    public ResponseEntity<?> getCurrentUserProfile() {
+        UserEntity currentUserEntity = userService.getCurrentUser();
         return ResponseEntity.ok(currentUserEntity);
     }
 

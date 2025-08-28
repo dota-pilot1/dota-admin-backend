@@ -2,7 +2,7 @@ package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.ChallengeService;
 import com.company.dotaadminbackend.application.UserService;
-import com.company.dotaadminbackend.domain.challenge.Challenge;
+import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
@@ -30,12 +30,12 @@ public class ChallengeController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createChallenge(@Valid @RequestBody CreateChallengeRequest request) {
-        UserEntity currentUserEntity = userService.getCurrentUserEntity();
-        Challenge challenge = challengeService.createChallenge(request, currentUserEntity.getId());
+        UserEntity currentUserEntity = userService.getCurrentUser();
+        ChallengeEntity challenge = challengeService.createChallenge(request, currentUserEntity.getId());
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Challenge created successfully");
+        response.put("message", "ChallengeEntity created successfully");
         response.put("challenge", ChallengeResponse.from(challenge));
         response.put("timestamp", LocalDateTime.now());
 
@@ -43,9 +43,9 @@ public class ChallengeController {
     }
 
     @GetMapping("/{challengeId}")
-    public ResponseEntity<Map<String, Object>> getChallenge(@PathVariable Long challengeId) {
-        Challenge challenge = challengeService.getChallengeById(challengeId)
-                .orElseThrow(() -> new IllegalArgumentException("Challenge not found with id: " + challengeId));
+    public ResponseEntity<Map<String, Object>> getChallengeEntity(@PathVariable Long challengeId) {
+        ChallengeEntity challenge = challengeService.getChallengeById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("ChallengeEntity not found with id: " + challengeId));
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -54,11 +54,11 @@ public class ChallengeController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getChallenges(
+    public ResponseEntity<Map<String, Object>> getChallengeEntitys(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String authorId) {
 
-        List<Challenge> challenges;
+        List<ChallengeEntity> challenges;
 
         if (status != null) {
             try {
@@ -88,5 +88,88 @@ public class ChallengeController {
         response.put("count", challenges.size());
 
         return ResponseEntity.ok(response);
+    }
+
+    // Participation APIs
+    @PostMapping("/{challengeId}/participate")
+    public ResponseEntity<Map<String, Object>> participateInChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeEntity updatedChallenge = challengeService.participateInChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Successfully joined the challenge");
+            response.put("challenge", ChallengeResponse.from(updatedChallenge));
+            response.put("participantCount", updatedChallenge.getParticipantCount());
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Challenge not found");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{challengeId}/participate")
+    public ResponseEntity<Map<String, Object>> leaveChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeEntity updatedChallenge = challengeService.leaveChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Successfully left the challenge");
+            response.put("challenge", ChallengeResponse.from(updatedChallenge));
+            response.put("participantCount", updatedChallenge.getParticipantCount());
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Challenge not found");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{challengeId}/participation-status")
+    public ResponseEntity<Map<String, Object>> getParticipationStatus(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            boolean isParticipant = challengeService.isParticipant(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("isParticipant", isParticipant);
+            response.put("userId", currentUser.getId());
+            response.put("challengeId", challengeId);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Challenge not found");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        }
     }
 }

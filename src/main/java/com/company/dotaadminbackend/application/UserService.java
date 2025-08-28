@@ -175,7 +175,7 @@ public class UserService {
         repository.deleteById(id);
     }
 
-    public UserEntity getCurrentUserEntity() {
+    public UserEntity getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("No authentication found");
@@ -191,12 +191,12 @@ public class UserService {
     }
 
     public UserEntity updateCurrentUserEntityProfile(String username, String email) {
-        UserEntity currentUserEntity = getCurrentUserEntity();
+        UserEntity currentUserEntity = getCurrentUser();
         return updateUserEntity(currentUserEntity.getId(), username, email);
     }
 
     public void deleteCurrentUserEntity(String password) {
-        UserEntity currentUserEntity = getCurrentUserEntity();
+        UserEntity currentUserEntity = getCurrentUser();
 
         // 비밀번호 검증
         UserEntity entity = repository.findById(currentUserEntity.getId())
@@ -212,7 +212,7 @@ public class UserService {
 
     public boolean isCurrentUserEntity(Long userId) {
         try {
-            UserEntity currentUserEntity = getCurrentUserEntity();
+            UserEntity currentUserEntity = getCurrentUser();
             return currentUserEntity.getId().equals(userId);
         } catch (Exception e) {
             return false;

@@ -1,6 +1,6 @@
 package com.company.dotaadminbackend.application;
 
-import com.company.dotaadminbackend.domain.challenge.Challenge;
+import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
@@ -20,9 +20,9 @@ public class ChallengeService {
         this.challengeRepository = challengeRepository;
     }
     
-    public Challenge createChallenge(CreateChallengeRequest request, Long authorId) {
+    public ChallengeEntity createChallenge(CreateChallengeRequest request, Long authorId) {
         // 도메인 엔티티 생성
-        Challenge challenge = new Challenge(
+        ChallengeEntity challenge = new ChallengeEntity(
             request.getTitle(), 
             request.getDescription(), 
             authorId, 
@@ -45,22 +45,47 @@ public class ChallengeService {
     }
     
     @Transactional(readOnly = true)
-    public List<Challenge> getAllChallenges() {
+    public List<ChallengeEntity> getAllChallenges() {
         return challengeRepository.findAllByOrderByCreatedAtDesc();
     }
     
     @Transactional(readOnly = true)
-    public Optional<Challenge> getChallengeById(Long id) {
+    public Optional<ChallengeEntity> getChallengeById(Long id) {
         return challengeRepository.findById(id);
     }
     
     @Transactional(readOnly = true)
-    public List<Challenge> getChallengesByStatus(ChallengeStatus status) {
+    public List<ChallengeEntity> getChallengesByStatus(ChallengeStatus status) {
         return challengeRepository.findByStatusOrderByCreatedAtDesc(status);
     }
     
     @Transactional(readOnly = true)
-    public List<Challenge> getChallengesByAuthor(Long authorId) {
+    public List<ChallengeEntity> getChallengesByAuthor(Long authorId) {
         return challengeRepository.findByAuthorIdOrderByCreatedAtDesc(authorId);
+    }
+    
+    // Participation Methods
+    public ChallengeEntity participateInChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        challenge.addParticipant(userId);
+        return challengeRepository.save(challenge);
+    }
+    
+    public ChallengeEntity leaveChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        challenge.removeParticipant(userId);
+        return challengeRepository.save(challenge);
+    }
+    
+    @Transactional(readOnly = true)
+    public boolean isParticipant(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        return challenge.isParticipant(userId);
     }
 }

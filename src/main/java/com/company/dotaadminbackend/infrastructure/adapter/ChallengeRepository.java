@@ -1,6 +1,6 @@
 package com.company.dotaadminbackend.infrastructure.adapter;
 
-import com.company.dotaadminbackend.domain.challenge.Challenge;
+import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
-    List<Challenge> findByStatusOrderByCreatedAtDesc(ChallengeStatus status);
-    List<Challenge> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
-    List<Challenge> findAllByOrderByCreatedAtDesc();
+public interface ChallengeRepository extends JpaRepository<ChallengeEntity, Long> {
+    List<ChallengeEntity> findByStatusOrderByCreatedAtDesc(ChallengeStatus status);
+    List<ChallengeEntity> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
+    List<ChallengeEntity> findAllByOrderByCreatedAtDesc();
 }

@@ -1,24 +1,26 @@
-package com.company.dotaadminbackend.domain.challenge;
+package com.company.dotaadminbackend.infrastructure.entity;
 
 import com.company.dotaadminbackend.domain.reward.RewardType;
+import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "challenges")
-public class Challenge {
+public class ChallengeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String title;
-
+    
     @Column(length = 1000)
     private String description;
 
@@ -32,7 +34,7 @@ public class Challenge {
 
     @Column(name = "reward_amount")
     private Integer rewardAmount;
-
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "reward_type")
     private RewardType rewardType;
@@ -40,7 +42,7 @@ public class Challenge {
     @ElementCollection
     @CollectionTable(name = "challenge_participants", joinColumns = @JoinColumn(name = "challenge_id"))
     @Column(name = "participant_id")
-    private List<Long> participantIds;
+    private List<Long> participantIds = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,9 +62,9 @@ public class Challenge {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    protected Challenge() {}
+    protected ChallengeEntity() {}
 
-    public Challenge(String title, String description, Long authorId,
+    public ChallengeEntity(String title, String description, Long authorId, 
                     LocalDate startDate, LocalDate endDate) {
         this.title = title;
         this.description = description;
@@ -70,8 +72,10 @@ public class Challenge {
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = ChallengeStatus.RECRUITING; // 기본값: 모집중
+        this.participantIds = new ArrayList<>();
     }
 
+    // Business Logic Methods
     public void updateReward(Integer rewardAmount, RewardType rewardType) {
         this.rewardAmount = rewardAmount;
         this.rewardType = rewardType;
@@ -91,6 +95,50 @@ public class Challenge {
 
     public boolean isRecruiting() {
         return ChallengeStatus.RECRUITING.equals(this.status);
+    }
+
+    // Participation Management Methods
+    public boolean canParticipate() {
+        return isRecruiting() && !isExpired();
+    }
+
+    public boolean isExpired() {
+        return LocalDate.now().isAfter(endDate);
+    }
+
+    public boolean isParticipant(Long userId) {
+        return participantIds != null && participantIds.contains(userId);
+    }
+
+    public boolean isAuthor(Long userId) {
+        return authorId.equals(userId);
+    }
+
+    public void addParticipant(Long userId) {
+        if (!canParticipate()) {
+            throw new IllegalStateException("Cannot participate in this challenge");
+        }
+        if (isAuthor(userId)) {
+            throw new IllegalStateException("Author cannot participate in their own challenge");
+        }
+        if (isParticipant(userId)) {
+            throw new IllegalStateException("User is already participating in this challenge");
+        }
+        
+        if (participantIds == null) {
+            participantIds = new ArrayList<>();
+        }
+        participantIds.add(userId);
+    }
+
+    public void removeParticipant(Long userId) {
+        if (participantIds != null) {
+            participantIds.remove(userId);
+        }
+    }
+
+    public int getParticipantCount() {
+        return participantIds != null ? participantIds.size() : 0;
     }
 
     // Getters
