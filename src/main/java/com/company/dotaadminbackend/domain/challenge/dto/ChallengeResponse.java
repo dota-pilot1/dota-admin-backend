@@ -22,6 +22,7 @@ public class ChallengeResponse {
     private Long authorId;
     private List<String> tags;
     private List<Long> participantIds;
+    private Integer participantCount;
     private ChallengeStatus status;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -38,6 +39,7 @@ public class ChallengeResponse {
             challenge.getAuthorId(),
             challenge.getTags(),
             challenge.getParticipantIds(),
+            challenge.getParticipantCount(),
             challenge.getStatus(),
             challenge.getStartDate(),
             challenge.getEndDate(),
