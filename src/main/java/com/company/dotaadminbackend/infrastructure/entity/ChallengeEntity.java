@@ -115,13 +115,21 @@ public class ChallengeEntity {
     }
 
     public void addParticipant(Long userId) {
-        if (!canParticipate()) {
-            throw new IllegalStateException("Cannot participate in this challenge");
-        }
         if (isParticipant(userId)) {
-            throw new IllegalStateException("User is already participating in this challenge");
+            throw new IllegalStateException("이미 참여한 챌린지입니다.");
         }
-        
+        if (isAuthor(userId)) {
+            throw new IllegalStateException("작성자는 챌린지에 참여할 수 없습니다.");
+        }
+        if (isExpired()) {
+            throw new IllegalStateException("챌린지 기간이 종료되어 참여할 수 없습니다.");
+        }
+        if (!isRecruiting()) {
+            throw new IllegalStateException("챌린지 모집 상태가 아닙니다.");
+        }
+        if (!canParticipate()) {
+            throw new IllegalStateException("챌린지에 참여할 수 없는 상태입니다.");
+        }
         if (participantIds == null) {
             participantIds = new ArrayList<>();
         }
