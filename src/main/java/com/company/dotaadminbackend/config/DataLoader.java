@@ -46,21 +46,72 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (!loadInitialUsers) {
-            System.out.println("Initial user data loading is disabled.");
-            return;
-        }
+        // 필수 계정들 생성 (항상 실행)
+        createEssentialAccounts();
         
-        if (userRepository.count() == 0) {
-            System.out.println("Loading fake user data...");
-            loadFakeUsers();
-            System.out.println("Fake user data loaded successfully!");
+        // 추가 테스트 데이터는 설정에 따라 로딩
+        if (loadInitialUsers) {
+            System.out.println("Loading additional fake user data...");
+            loadAdditionalFakeUsers();
+            System.out.println("Additional fake user data loaded successfully!");
         } else {
-            System.out.println("User data already exists. Skipping data loading.");
+            System.out.println("Additional user data loading is disabled.");
         }
     }
 
-    private void loadFakeUsers() {
+    private void createEssentialAccounts() {
+        System.out.println("Checking and creating essential accounts...");
+    // 새 스키마(create) 첫 기동 시 RoleInitializer 보다 먼저 실행될 수 있으므로 방어적으로 ROLE 존재 보장
+    RoleEntity adminRole = ensureRole("ADMIN", "관리자");
+    RoleEntity userRole = ensureRole("USER", "기본 사용자");
+
+        // 필수 계정들 정의
+        String[][] essentialAccounts = {
+            {"terecal", "terecal@daum.net", "123456", "ADMIN"}, // 최초 계정은 관리자 권한 부여
+            {"test1", "test1@daum.net", "123456", "USER"},
+            {"test2", "test2@daum.net", "123456", "USER"}
+        };
+
+        for (String[] accountInfo : essentialAccounts) {
+            String username = accountInfo[0];
+            String email = accountInfo[1];
+            String password = accountInfo[2];
+            String roleName = accountInfo[3];
+
+            // 이메일로 계정 존재 여부 확인
+            userRepository.findByEmail(email).ifPresentOrElse(existing -> {
+                System.out.println("Essential account already exists: " + email);
+            }, () -> {
+                UserEntity user = new UserEntity();
+                user.setUsername(username);
+                user.setEmail(email);
+                user.setPassword(passwordEncoder.encode(password));
+                user.setRole(roleName.equals("ADMIN") ? adminRole : userRole);
+                userRepository.save(user);
+                System.out.println("Created essential account: " + email);
+            });
+        }
+    }
+
+    /**
+     * 지정한 이름의 Role 을 찾아보고 없으면 즉시 생성 (create ddl-auto 상황 초기 부트스트랩 안정성 확보)
+     */
+    private RoleEntity ensureRole(String name, String description) {
+        return roleRepository.findByName(name).orElseGet(() -> {
+            System.out.println("[DataLoader] Missing role '" + name + "' -> creating inline (race-safe)");
+            RoleEntity r = new RoleEntity();
+            r.setName(name);
+            r.setDescription(description);
+            return roleRepository.save(r);
+        });
+    }
+
+    private void loadAdditionalFakeUsers() {
+        if (userRepository.count() > 3) { // 필수 계정 3개 이상이면 추가 데이터 로딩 안함
+            System.out.println("Additional user data already exists. Skipping additional data loading.");
+            return;
+        }
+        
         List<UserEntity> users = new ArrayList<>();
         
         // Role 조회
@@ -69,13 +120,15 @@ public class DataLoader implements CommandLineRunner {
         RoleEntity userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("USER role not found"));
 
-        // 관리자 계정 생성
-        UserEntity admin = new UserEntity();
-        admin.setUsername("admin");
-        admin.setEmail("admin@example.com");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setRole(adminRole);
-        users.add(admin);
+        // 관리자 계정 생성 (이미 없는 경우에만)
+        if (!userRepository.existsByEmail("admin@example.com")) {
+            UserEntity admin = new UserEntity();
+            admin.setUsername("admin");
+            admin.setEmail("admin@example.com");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole(adminRole);
+            users.add(admin);
+        }
 
         // 1000명의 일반 유저 생성
         for (int i = 1; i <= 1000; i++) {

@@ -189,4 +189,129 @@ public class ChallengeController {
         response.put("timestamp", LocalDateTime.now());
         return ResponseEntity.ok(response);
     }
+    
+    // 상태 변경 API들
+    @PatchMapping("/{challengeId}/start")
+    public ResponseEntity<Map<String, Object>> startChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeResponse challenge = challengeService.startChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 시작되었습니다.");
+            response.put("challenge", challenge);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    @PatchMapping("/{challengeId}/complete")
+    public ResponseEntity<Map<String, Object>> completeChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeResponse challenge = challengeService.completeChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 완료되었습니다.");
+            response.put("challenge", challenge);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    @PatchMapping("/{challengeId}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeResponse challenge = challengeService.cancelChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 취소되었습니다.");
+            response.put("challenge", challenge);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    @PatchMapping("/{challengeId}/reopen")
+    public ResponseEntity<Map<String, Object>> reopenChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeResponse challenge = challengeService.reopenChallenge(challengeId, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 다시 열렸습니다.");
+            response.put("challenge", challenge);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 }

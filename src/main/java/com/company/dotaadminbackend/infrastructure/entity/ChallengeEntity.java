@@ -81,16 +81,37 @@ public class ChallengeEntity {
         this.rewardType = rewardType;
     }
 
+    // 상태 변경 메서드들
     public void startChallenge() {
-        this.status = ChallengeStatus.ACTIVE;
+        if (status != ChallengeStatus.RECRUITING) {
+            throw new IllegalStateException("모집중 상태에서만 시작할 수 있습니다.");
+        }
+        this.status = ChallengeStatus.IN_PROGRESS;
     }
 
     public void completeChallenge() {
+        if (status != ChallengeStatus.IN_PROGRESS) {
+            throw new IllegalStateException("진행중 상태에서만 완료할 수 있습니다.");
+        }
         this.status = ChallengeStatus.COMPLETED;
     }
 
+    public void cancelChallenge() {
+        if (status == ChallengeStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 챌린지는 취소할 수 없습니다.");
+        }
+        this.status = ChallengeStatus.CANCELLED;
+    }
+
+    public void reopenChallenge() {
+        if (status == ChallengeStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 챌린지는 다시 열 수 없습니다.");
+        }
+        this.status = ChallengeStatus.RECRUITING;
+    }
+
     public boolean isActive() {
-        return ChallengeStatus.ACTIVE.equals(this.status);
+        return ChallengeStatus.IN_PROGRESS.equals(this.status);
     }
 
     public boolean isRecruiting() {
@@ -165,4 +186,17 @@ public class ChallengeEntity {
     // Setters (필요한 것들만)
     public void setTags(List<String> tags) { this.tags = tags; }
     public void setParticipantIds(List<Long> participantIds) { this.participantIds = participantIds; }
+    
+    // 상태별 권한 체크
+    public boolean canModify() {
+        return status == ChallengeStatus.RECRUITING || status == ChallengeStatus.IN_PROGRESS;
+    }
+
+    public boolean canComplete() {
+        return status == ChallengeStatus.IN_PROGRESS;
+    }
+
+    public boolean canCancel() {
+        return status != ChallengeStatus.COMPLETED;
+    }
 }

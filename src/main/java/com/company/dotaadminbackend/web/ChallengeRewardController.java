@@ -26,15 +26,14 @@ public class ChallengeRewardController {
         this.userService = userService;
     }
     
-    // 포상 지급
+    // 특정 챌린지에 포상 지급 - POST /api/challenges/{challengeId}/rewards
     @PostMapping("/{challengeId}/rewards")
     public ResponseEntity<Map<String, Object>> createReward(
             @PathVariable Long challengeId,
             @Valid @RequestBody CreateChallengeRewardRequest request) {
         
-        UserEntity currentUser = userService.getCurrentUser();
-        
         try {
+            UserEntity currentUser = userService.getCurrentUser();
             ChallengeRewardResponse reward = challengeRewardService.createReward(challengeId, request, currentUser.getId());
             
             Map<String, Object> response = new HashMap<>();
@@ -56,14 +55,14 @@ public class ChallengeRewardController {
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "포상 지급 중 오류가 발생했습니다.");
+            errorResponse.put("message", "포상 지급 중 오류가 발생했습니다: " + e.getMessage());
             errorResponse.put("timestamp", LocalDateTime.now());
             
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
     
-    // 특정 챌린지의 포상 내역 조회
+    // 특정 챌린지의 포상 내역 조회 - GET /api/challenges/{challengeId}/rewards
     @GetMapping("/{challengeId}/rewards")
     public ResponseEntity<Map<String, Object>> getRewardsByChallengeId(@PathVariable Long challengeId) {
         try {
@@ -80,14 +79,14 @@ public class ChallengeRewardController {
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다.");
+            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다: " + e.getMessage());
             errorResponse.put("timestamp", LocalDateTime.now());
             
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
     
-    // 포상 상세 조회
+    // 특정 포상 상세 조회 - GET /api/challenges/{challengeId}/rewards/{rewardId}
     @GetMapping("/{challengeId}/rewards/{rewardId}")
     public ResponseEntity<Map<String, Object>> getRewardById(
             @PathVariable Long challengeId,
@@ -113,7 +112,7 @@ public class ChallengeRewardController {
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다.");
+            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다: " + e.getMessage());
             errorResponse.put("timestamp", LocalDateTime.now());
             
             return ResponseEntity.internalServerError().body(errorResponse);
@@ -121,20 +120,20 @@ public class ChallengeRewardController {
     }
 }
 
-// 사용자별 포상 내역 조회를 위한 별도 컨트롤러 (선택사항)
+// 사용자별 포상 내역 조회를 위한 별도 컨트롤러
 @RestController
 @RequestMapping("/api/rewards")
-class UserChallengeRewardController {
+class UserRewardController {
     
     private final ChallengeRewardService challengeRewardService;
     private final UserService userService;
     
-    public UserChallengeRewardController(ChallengeRewardService challengeRewardService, UserService userService) {
+    public UserRewardController(ChallengeRewardService challengeRewardService, UserService userService) {
         this.challengeRewardService = challengeRewardService;
         this.userService = userService;
     }
     
-    // 현재 사용자의 포상 내역 조회
+    // 현재 사용자의 모든 포상 내역 조회 - GET /api/rewards/my
     @GetMapping("/my")
     public ResponseEntity<Map<String, Object>> getMyRewards() {
         try {
@@ -152,7 +151,7 @@ class UserChallengeRewardController {
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다.");
+            errorResponse.put("message", "포상 내역 조회 중 오류가 발생했습니다: " + e.getMessage());
             errorResponse.put("timestamp", LocalDateTime.now());
             
             return ResponseEntity.internalServerError().body(errorResponse);

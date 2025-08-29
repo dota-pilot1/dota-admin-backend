@@ -20,11 +20,13 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
+    # 개발/문제 해결용: 매 기동시 스키마 재생성 (데이터 모두 삭제됨)
     hibernate:
-      ddl-auto: update
+      ddl-auto: create  # 확인 후 'update' 또는 'validate' 로 되돌리세요
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  open-in-view: false
   flyway:
     enabled: false  # 개발 단계: JPA ddl-auto(update) 사용 위해 비활성화
   mail:
@@ -48,7 +50,7 @@ app:
     secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890123456789012345678901234567890}
     expiration: 86400000 # 24 hours in milliseconds
   data:
-    load-initial-users: false # Set to true to load initial test users on startup
+    load-initial-users: false # 필수 계정만 생성, 추가 1000명 테스트 계정은 생성 안함
   roles:
     autocreate: true
   users:
@@ -72,10 +74,10 @@ kakao:
 logging:
   level:
     root: INFO
-  "com.company.dotaadminbackend": DEBUG # 애플리케이션 비즈니스 로그
-  "org.springframework.security": INFO  # 필요한 경우 DEBUG
-  "org.hibernate.SQL": DEBUG            # 실행되는 SQL 확인
-  "org.hibernate.type.descriptor.sql.BasicBinder": TRACE # 바인드 파라미터
+    com.company.dotaadminbackend: DEBUG # 애플리케이션 비즈니스 로그
+    org.springframework.security: INFO  # 필요한 경우 DEBUG (DEBUG 로 내리면 보안 관련 상세 로그)
+    org.hibernate.SQL: DEBUG            # 실행되는 SQL 확인
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # 바인드 파라미터
 
 ---
 spring:
@@ -89,7 +91,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create # dev 프로필도 동일하게 강제 재생성 (필요 시 'update'로 되돌리세요)
+  open-in-view: false
   flyway:
     enabled: false
 
@@ -101,7 +104,7 @@ app:
     secret: ${JWT_SECRET:myDevSecretKey}
     expiration: 3600000 # 1 hour in milliseconds
   data:
-    load-initial-users: true # Set to true to load initial test users on startup
+    load-initial-users: false # 필수 계정만 생성, 추가 1000명 테스트 계정은 생성 안함
   roles:
     autocreate: true
   users:
@@ -116,8 +119,8 @@ app:
 logging:
   level:
     root: DEBUG
-  "com.company.dotaadminbackend": DEBUG
-  "org.springframework.security": DEBUG
-  "org.hibernate.SQL": DEBUG
-  "org.hibernate.type.descriptor.sql.BasicBinder": TRACE
+    com.company.dotaadminbackend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 

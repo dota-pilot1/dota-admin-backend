@@ -129,4 +129,58 @@ public class ChallengeService {
                 .map(this::toChallengeResponse)
                 .collect(Collectors.toList());
     }
+    
+    // 상태 변경 메서드들
+    public ChallengeResponse startChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        // 작성자만 상태 변경 가능
+        if (!challenge.getAuthorId().equals(userId)) {
+            throw new IllegalStateException("챌린지 작성자만 상태를 변경할 수 있습니다.");
+        }
+        
+        challenge.startChallenge();
+        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
+        return toChallengeResponse(updatedChallenge);
+    }
+    
+    public ChallengeResponse completeChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        if (!challenge.getAuthorId().equals(userId)) {
+            throw new IllegalStateException("챌린지 작성자만 상태를 변경할 수 있습니다.");
+        }
+        
+        challenge.completeChallenge();
+        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
+        return toChallengeResponse(updatedChallenge);
+    }
+    
+    public ChallengeResponse cancelChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        if (!challenge.getAuthorId().equals(userId)) {
+            throw new IllegalStateException("챌린지 작성자만 상태를 변경할 수 있습니다.");
+        }
+        
+        challenge.cancelChallenge();
+        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
+        return toChallengeResponse(updatedChallenge);
+    }
+    
+    public ChallengeResponse reopenChallenge(Long challengeId, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        if (!challenge.getAuthorId().equals(userId)) {
+            throw new IllegalStateException("챌린지 작성자만 상태를 변경할 수 있습니다.");
+        }
+        
+        challenge.reopenChallenge();
+        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
+        return toChallengeResponse(updatedChallenge);
+    }
 }
