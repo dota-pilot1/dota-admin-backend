@@ -101,10 +101,12 @@ public class ChallengeService {
     public ChallengeResponse toChallengeResponse(ChallengeEntity challenge) {
         ChallengeResponse response = ChallengeResponse.from(challenge);
         
-        // Fetch author name
+        // Fetch author name and email
         Optional<UserEntity> author = userRepository.findById(challenge.getAuthorId());
         if (author.isPresent()) {
-            response.setAuthor(author.get().getUsername());
+            UserEntity authorUser = author.get();
+            response.setUsername(authorUser.getUsername());
+            response.setEmail(authorUser.getEmail());
         }
         
         // Fetch participant details

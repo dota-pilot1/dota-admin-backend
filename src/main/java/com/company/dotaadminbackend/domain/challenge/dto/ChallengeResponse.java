@@ -20,7 +20,8 @@ public class ChallengeResponse {
     private String title;
     private String description;
     private Long authorId;
-    private String author; // 작성자 이름 추가
+    private String username; // 작성자 username
+    private String email; // 작성자 이메일
     private List<String> tags;
     private List<Long> participantIds;
     private List<ParticipantResponse> participants;
@@ -39,7 +40,8 @@ public class ChallengeResponse {
             challenge.getTitle(),
             challenge.getDescription(),
             challenge.getAuthorId(),
-            null, // author will be set by service layer
+            null, // username will be set by service layer
+            null, // email will be set by service layer
             challenge.getTags(),
             challenge.getParticipantIds(),
             null, // participants will be set by service layer

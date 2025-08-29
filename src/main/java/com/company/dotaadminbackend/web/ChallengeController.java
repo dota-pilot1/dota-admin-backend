@@ -49,7 +49,8 @@ public class ChallengeController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("challenge", ChallengeResponse.from(challenge));
+    // Enriched response with author & participants
+    response.put("challenge", challengeService.toChallengeResponse(challenge));
         return ResponseEntity.ok(response);
     }
 
@@ -103,7 +104,7 @@ public class ChallengeController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Successfully joined the challenge");
-            response.put("challenge", ChallengeResponse.from(updatedChallenge));
+            response.put("challenge", challengeService.toChallengeResponse(updatedChallenge));
             response.put("participantCount", updatedChallenge.getParticipantCount());
             response.put("timestamp", LocalDateTime.now());
             
@@ -135,7 +136,7 @@ public class ChallengeController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Successfully left the challenge");
-            response.put("challenge", ChallengeResponse.from(updatedChallenge));
+            response.put("challenge", challengeService.toChallengeResponse(updatedChallenge));
             response.put("participantCount", updatedChallenge.getParticipantCount());
             response.put("timestamp", LocalDateTime.now());
             
@@ -173,5 +174,19 @@ public class ChallengeController {
             
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // Reward info endpoint: returns challenge with participant enriched data for reward UI
+    @GetMapping("/{challengeId}/reward-info")
+    public ResponseEntity<Map<String, Object>> getRewardInfo(@PathVariable Long challengeId) {
+        ChallengeEntity challenge = challengeService.getChallengeById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("ChallengeEntity not found with id: " + challengeId));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("challenge", challengeService.toChallengeResponse(challenge));
+        response.put("participantCount", challenge.getParticipantCount());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.ok(response);
     }
 }
