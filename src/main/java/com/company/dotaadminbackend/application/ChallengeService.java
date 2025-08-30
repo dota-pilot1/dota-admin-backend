@@ -158,19 +158,6 @@ public class ChallengeService {
         return toChallengeResponse(updatedChallenge);
     }
     
-    public ChallengeResponse cancelChallenge(Long challengeId, Long userId) {
-        ChallengeEntity challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
-        
-        if (!challenge.getAuthorId().equals(userId)) {
-            throw new IllegalStateException("챌린지 작성자만 상태를 변경할 수 있습니다.");
-        }
-        
-        challenge.cancelChallenge();
-        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
-        return toChallengeResponse(updatedChallenge);
-    }
-    
     public ChallengeResponse reopenChallenge(Long challengeId, Long userId) {
         ChallengeEntity challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
