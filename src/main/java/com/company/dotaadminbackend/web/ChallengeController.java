@@ -5,6 +5,7 @@ import com.company.dotaadminbackend.application.UserService;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
+import com.company.dotaadminbackend.domain.challenge.dto.UpdateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import jakarta.validation.Valid;
@@ -263,6 +264,39 @@ public class ChallengeController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "챌린지가 다시 열렸습니다.");
+            response.put("challenge", challenge);
+            response.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    @PutMapping("/{challengeId}")
+    public ResponseEntity<Map<String, Object>> updateChallenge(
+            @PathVariable Long challengeId,
+            @Valid @RequestBody UpdateChallengeRequest request) {
+        UserEntity currentUser = userService.getCurrentUser();
+        
+        try {
+            ChallengeResponse challenge = challengeService.updateChallenge(challengeId, request, currentUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 수정되었습니다.");
             response.put("challenge", challenge);
             response.put("timestamp", LocalDateTime.now());
             

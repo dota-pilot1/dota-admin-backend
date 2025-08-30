@@ -180,6 +180,17 @@ public class ChallengeEntity {
     public void setTags(List<String> tags) { this.tags = tags; }
     public void setParticipantIds(List<Long> participantIds) { this.participantIds = participantIds; }
     
+    // 챌린지 정보 수정 메서드
+    public void updateChallengeInfo(String title, String description, LocalDate startDate, LocalDate endDate) {
+        if (!canModify()) {
+            throw new IllegalStateException("챌린지를 수정할 수 없는 상태입니다.");
+        }
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    
     // 상태별 권한 체크
     public boolean canModify() {
         return status == ChallengeStatus.RECRUITING || status == ChallengeStatus.IN_PROGRESS;

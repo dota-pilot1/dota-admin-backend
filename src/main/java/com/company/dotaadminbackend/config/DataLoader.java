@@ -2,14 +2,19 @@ package com.company.dotaadminbackend.config;
 
 import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
+import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
+import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
+import com.company.dotaadminbackend.domain.reward.RewardType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -18,6 +23,7 @@ public class DataLoader implements CommandLineRunner {
 
     private final SpringDataUserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final ChallengeRepository challengeRepository;
     private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
     
@@ -38,9 +44,11 @@ public class DataLoader implements CommandLineRunner {
         "gmail.com", "naver.com", "daum.net", "kakao.com", "yahoo.com", "outlook.com", "hotmail.com"
     };
 
-    public DataLoader(SpringDataUserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public DataLoader(SpringDataUserRepository userRepository, RoleRepository roleRepository, 
+                     ChallengeRepository challengeRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.challengeRepository = challengeRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -48,6 +56,9 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // 필수 계정들 생성 (항상 실행)
         createEssentialAccounts();
+        
+        // 기본 챌린지 생성 (항상 실행)
+        createEssentialChallenges();
         
         // 추가 테스트 데이터는 설정에 따라 로딩
         if (loadInitialUsers) {
@@ -104,6 +115,50 @@ public class DataLoader implements CommandLineRunner {
             r.setDescription(description);
             return roleRepository.save(r);
         });
+    }
+    
+    private void createEssentialChallenges() {
+        System.out.println("Checking and creating essential challenges...");
+        
+        // terecal 계정 찾기
+        UserEntity terecalUser = userRepository.findByEmail("terecal@daum.net")
+                .orElseThrow(() -> new RuntimeException("terecal@daum.net 계정을 찾을 수 없습니다."));
+        
+        // 기본 챌린지가 이미 있는지 확인
+        if (challengeRepository.count() > 0) {
+            System.out.println("Essential challenges already exist. Skipping challenge creation.");
+            return;
+        }
+        
+        // 1. 콜봇 with rag chain 챌린지
+        ChallengeEntity chatbotChallenge = new ChallengeEntity(
+            "챗봇 with rag chain 만들기",
+            "RAG(Retrieval-Augmented Generation) 체인을 활용한 지능형 챗봇을 개발하는 챌린지입니다. " +
+            "문서 검색과 생성형 AI를 결합하여 더 정확하고 유용한 답변을 제공하는 챗봇을 구현해보세요.",
+            terecalUser.getId(),
+            LocalDate.now(),
+            LocalDate.now().plusDays(30)
+        );
+        chatbotChallenge.setTags(Arrays.asList("chatbot", "rag", "ai", "nlp", "python"));
+        chatbotChallenge.updateReward(100000, RewardType.CASH);
+        
+        // 2. 칸반 보드 with dnd-kit 챌린지
+        ChallengeEntity kanbanChallenge = new ChallengeEntity(
+            "칸반 보드 with dnd-kit 구현",
+            "dnd-kit 라이브러리를 사용하여 드래그 앤 드롭이 가능한 칸반 보드를 구현하는 챌린지입니다. " +
+            "할 일 관리와 작업 흐름을 시각적으로 관리할 수 있는 직관적인 인터페이스를 만들어보세요.",
+            terecalUser.getId(),
+            LocalDate.now(),
+            LocalDate.now().plusDays(30)
+        );
+        kanbanChallenge.setTags(Arrays.asList("kanban", "dnd-kit", "react", "typescript", "frontend"));
+        kanbanChallenge.updateReward(150000, RewardType.CASH);
+        
+        // 챌린지 저장
+        challengeRepository.save(chatbotChallenge);
+        challengeRepository.save(kanbanChallenge);
+        
+        System.out.println("Created essential challenges: 챗봇 with rag chain, 칸반 보드 with dnd-kit");
     }
 
     private void loadAdditionalFakeUsers() {

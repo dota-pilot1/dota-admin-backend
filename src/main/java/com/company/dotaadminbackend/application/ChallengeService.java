@@ -7,6 +7,7 @@ import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import com.company.dotaadminbackend.infrastructure.repository.ChallengeRewardRepository;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
+import com.company.dotaadminbackend.domain.challenge.dto.UpdateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
 import com.company.dotaadminbackend.domain.challenge.dto.ParticipantResponse;
 import org.springframework.stereotype.Service;
@@ -175,6 +176,36 @@ public class ChallengeService {
         }
         
         challenge.reopenChallenge();
+        ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
+        return toChallengeResponse(updatedChallenge);
+    }
+    
+    public ChallengeResponse updateChallenge(Long challengeId, UpdateChallengeRequest request, Long userId) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+        
+        if (!challenge.getAuthorId().equals(userId)) {
+            throw new IllegalStateException("챌린지 작성자만 수정할 수 있습니다.");
+        }
+        
+        // 기본 정보 수정 (엔티티의 updateChallengeInfo 메서드 사용)
+        challenge.updateChallengeInfo(
+            request.getTitle(),
+            request.getDescription(),
+            request.getStartDate(),
+            request.getEndDate()
+        );
+        
+        // 태그 수정
+        if (request.getTags() != null) {
+            challenge.setTags(request.getTags());
+        }
+        
+        // 보상 정보 수정
+        if (request.getRewardAmount() != null && request.getRewardType() != null) {
+            challenge.updateReward(request.getRewardAmount(), request.getRewardType());
+        }
+        
         ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
         return toChallengeResponse(updatedChallenge);
     }
