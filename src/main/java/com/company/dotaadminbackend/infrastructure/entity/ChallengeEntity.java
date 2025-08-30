@@ -96,13 +96,6 @@ public class ChallengeEntity {
         this.status = ChallengeStatus.COMPLETED;
     }
 
-    public void cancelChallenge() {
-        if (status == ChallengeStatus.COMPLETED) {
-            throw new IllegalStateException("완료된 챌린지는 취소할 수 없습니다.");
-        }
-        this.status = ChallengeStatus.CANCELLED;
-    }
-
     public void reopenChallenge() {
         if (status == ChallengeStatus.COMPLETED) {
             throw new IllegalStateException("완료된 챌린지는 다시 열 수 없습니다.");
@@ -194,9 +187,5 @@ public class ChallengeEntity {
 
     public boolean canComplete() {
         return status == ChallengeStatus.IN_PROGRESS;
-    }
-
-    public boolean canCancel() {
-        return status != ChallengeStatus.COMPLETED;
     }
 }

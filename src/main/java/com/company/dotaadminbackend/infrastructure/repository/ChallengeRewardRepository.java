@@ -33,4 +33,8 @@ public interface ChallengeRewardRepository extends JpaRepository<ChallengeReward
     // 특정 참가자가 받은 총 포상 금액 합계
     @Query("SELECT COALESCE(SUM(r.amount), 0) FROM ChallengeRewardEntity r WHERE r.participantId = :participantId AND r.processed = true")
     Integer getTotalRewardAmountByParticipantId(@Param("participantId") Long participantId);
+    
+    // 특정 챌린지에서 포상을 받은 참가자 수 조회
+    @Query("SELECT COUNT(DISTINCT r.participantId) FROM ChallengeRewardEntity r WHERE r.challengeId = :challengeId AND r.processed = true")
+    Long getRewardedParticipantCountByChallengeId(@Param("challengeId") Long challengeId);
 }

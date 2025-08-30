@@ -31,6 +31,7 @@ public class ChallengeResponse {
     private LocalDate endDate;
     private Integer rewardAmount;
     private RewardType rewardType;
+    private Long rewardedParticipantCount; // 포상 받은 참가자 수
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -51,6 +52,7 @@ public class ChallengeResponse {
             challenge.getEndDate(),
             challenge.getRewardAmount(),
             challenge.getRewardType(),
+            0L, // rewardedParticipantCount will be set by service layer
             challenge.getCreatedAt(),
             challenge.getUpdatedAt()
         );
