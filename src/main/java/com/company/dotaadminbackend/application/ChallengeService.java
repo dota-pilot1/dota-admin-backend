@@ -5,6 +5,7 @@ import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
+import com.company.dotaadminbackend.infrastructure.repository.ChallengeRewardRepository;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
 import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
 import com.company.dotaadminbackend.domain.challenge.dto.ParticipantResponse;
@@ -21,10 +22,12 @@ public class ChallengeService {
     
     private final ChallengeRepository challengeRepository;
     private final SpringDataUserRepository userRepository;
+    private final ChallengeRewardRepository challengeRewardRepository;
     
-    public ChallengeService(ChallengeRepository challengeRepository, SpringDataUserRepository userRepository) {
+    public ChallengeService(ChallengeRepository challengeRepository, SpringDataUserRepository userRepository, ChallengeRewardRepository challengeRewardRepository) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
+        this.challengeRewardRepository = challengeRewardRepository;
     }
     
     public ChallengeEntity createChallenge(CreateChallengeRequest request, Long authorId) {
@@ -119,6 +122,11 @@ public class ChallengeService {
                 .collect(Collectors.toList());
         
         response.setParticipants(participants);
+        
+        // Fetch rewarded participant count
+        Long rewardedCount = challengeRewardRepository.getRewardedParticipantCountByChallengeId(challenge.getId());
+        response.setRewardedParticipantCount(rewardedCount);
+        
         return response;
     }
     
