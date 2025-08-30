@@ -3,7 +3,6 @@ package com.company.dotaadminbackend.application;
 import com.company.dotaadminbackend.domain.reward.dto.CreateChallengeRewardRequest;
 import com.company.dotaadminbackend.domain.reward.dto.ChallengeRewardResponse;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeRewardEntity;
-import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.infrastructure.repository.ChallengeRewardRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
@@ -32,12 +31,12 @@ public class ChallengeRewardService {
     
     // 포상 지급
     public ChallengeRewardResponse createReward(Long challengeId, CreateChallengeRewardRequest request, Long createdBy) {
-        // 챌린지 존재 확인
+        // 챌린지 존재 확인 (엔티티 참조)
         ChallengeEntity challenge = challengeRepository.findById(challengeId)
             .orElseThrow(() -> new IllegalArgumentException("챌린지를 찾을 수 없습니다: " + challengeId));
         
-        // 참가자 존재 확인
-        UserEntity participant = userRepository.findById(request.getParticipantId())
+        // 참가자 존재 확인 (존재만 검증)
+        userRepository.findById(request.getParticipantId())
             .orElseThrow(() -> new IllegalArgumentException("참가자를 찾을 수 없습니다: " + request.getParticipantId()));
         
         // 참가자가 해당 챌린지에 참여했는지 확인
@@ -47,7 +46,7 @@ public class ChallengeRewardService {
         
         // 포상 엔티티 생성
         ChallengeRewardEntity reward = new ChallengeRewardEntity(
-            challengeId,
+            challenge,
             request.getParticipantId(),
             request.getAmount(),
             request.getMethod(),
@@ -89,7 +88,7 @@ public class ChallengeRewardService {
     // 특정 챌린지의 모든 포상 내역 조회
     @Transactional(readOnly = true)
     public List<ChallengeRewardResponse> getRewardsByChallengeId(Long challengeId) {
-        List<ChallengeRewardEntity> rewards = challengeRewardRepository.findByChallengeIdOrderByCreatedAtDesc(challengeId);
+    List<ChallengeRewardEntity> rewards = challengeRewardRepository.findByChallenge_IdOrderByCreatedAtDesc(challengeId);
         return rewards.stream()
                 .map(this::toChallengeRewardResponse)
                 .toList();

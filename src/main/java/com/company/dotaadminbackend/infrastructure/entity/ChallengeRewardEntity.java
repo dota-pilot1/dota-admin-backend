@@ -11,8 +11,9 @@ public class ChallengeRewardEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "challenge_id", nullable = false)
-    private Long challengeId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "challenge_id", nullable = false)
+    private ChallengeEntity challenge;
     
     @Column(name = "participant_id", nullable = false)
     private Long participantId;
@@ -43,9 +44,9 @@ public class ChallengeRewardEntity {
     public ChallengeRewardEntity() {}
     
     // 생성자
-    public ChallengeRewardEntity(Long challengeId, Long participantId, Integer amount, 
-                       ChallengeRewardMethod method, String reason, Long createdBy) {
-        this.challengeId = challengeId;
+    public ChallengeRewardEntity(ChallengeEntity challenge, Long participantId, Integer amount,
+                                 ChallengeRewardMethod method, String reason, Long createdBy) {
+        this.challenge = challenge;
         this.participantId = participantId;
         this.amount = amount;
         this.method = method;
@@ -65,8 +66,9 @@ public class ChallengeRewardEntity {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
-    public Long getChallengeId() { return challengeId; }
-    public void setChallengeId(Long challengeId) { this.challengeId = challengeId; }
+    public Long getChallengeId() { return challenge != null ? challenge.getId() : null; }
+    public ChallengeEntity getChallenge() { return challenge; }
+    public void setChallenge(ChallengeEntity challenge) { this.challenge = challenge; }
     
     public Long getParticipantId() { return participantId; }
     public void setParticipantId(Long participantId) { this.participantId = participantId; }

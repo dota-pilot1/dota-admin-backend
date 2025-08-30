@@ -209,4 +209,17 @@ public class ChallengeService {
         ChallengeEntity updatedChallenge = challengeRepository.save(challenge);
         return toChallengeResponse(updatedChallenge);
     }
+
+    public void deleteChallenge(Long challengeId, Long requesterId, boolean isAdmin) {
+        ChallengeEntity challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
+
+        if (!challenge.getAuthorId().equals(requesterId) && !isAdmin) {
+            throw new IllegalStateException("삭제 권한이 없습니다.");
+        }
+
+        // With DB-level ON DELETE CASCADE on challenge_rewards.challenge_id foreign key
+        // simply deleting the challenge will remove rewards automatically.
+        challengeRepository.delete(challenge);
+    }
 }

@@ -12,13 +12,13 @@ import java.util.List;
 public interface ChallengeRewardRepository extends JpaRepository<ChallengeRewardEntity, Long> {
     
     // 특정 챌린지의 모든 포상 내역 조회
-    List<ChallengeRewardEntity> findByChallengeIdOrderByCreatedAtDesc(Long challengeId);
+    List<ChallengeRewardEntity> findByChallenge_IdOrderByCreatedAtDesc(Long challengeId);
     
     // 특정 참가자의 모든 포상 내역 조회
     List<ChallengeRewardEntity> findByParticipantIdOrderByCreatedAtDesc(Long participantId);
     
     // 특정 챌린지의 특정 참가자 포상 내역 조회
-    List<ChallengeRewardEntity> findByChallengeIdAndParticipantIdOrderByCreatedAtDesc(Long challengeId, Long participantId);
+    List<ChallengeRewardEntity> findByChallenge_IdAndParticipantIdOrderByCreatedAtDesc(Long challengeId, Long participantId);
     
     // 처리되지 않은 포상 내역 조회
     List<ChallengeRewardEntity> findByProcessedFalseOrderByCreatedAtAsc();
@@ -27,7 +27,7 @@ public interface ChallengeRewardRepository extends JpaRepository<ChallengeReward
     List<ChallengeRewardEntity> findByCreatedByOrderByCreatedAtDesc(Long createdBy);
     
     // 특정 챌린지의 총 포상 금액 합계
-    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM ChallengeRewardEntity r WHERE r.challengeId = :challengeId AND r.processed = true")
+    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM ChallengeRewardEntity r WHERE r.challenge.id = :challengeId AND r.processed = true")
     Integer getTotalRewardAmountByChallengeId(@Param("challengeId") Long challengeId);
     
     // 특정 참가자가 받은 총 포상 금액 합계
@@ -35,6 +35,9 @@ public interface ChallengeRewardRepository extends JpaRepository<ChallengeReward
     Integer getTotalRewardAmountByParticipantId(@Param("participantId") Long participantId);
     
     // 특정 챌린지에서 포상을 받은 참가자 수 조회
-    @Query("SELECT COUNT(DISTINCT r.participantId) FROM ChallengeRewardEntity r WHERE r.challengeId = :challengeId AND r.processed = true")
+    @Query("SELECT COUNT(DISTINCT r.participantId) FROM ChallengeRewardEntity r WHERE r.challenge.id = :challengeId AND r.processed = true")
     Long getRewardedParticipantCountByChallengeId(@Param("challengeId") Long challengeId);
+
+    // 챌린지 삭제 시 연관 포상 삭제
+    void deleteByChallenge_Id(Long challengeId); // (현재 cascade 사용으로 호출 필요 없음)
 }

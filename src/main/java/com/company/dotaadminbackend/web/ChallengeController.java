@@ -317,4 +317,30 @@ public class ChallengeController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
+    @DeleteMapping("/{challengeId}")
+    public ResponseEntity<Map<String, Object>> deleteChallenge(@PathVariable Long challengeId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        try {
+            boolean isAdmin = currentUser.isAdmin();
+            challengeService.deleteChallenge(challengeId, currentUser.getId(), isAdmin);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "챌린지가 삭제되었습니다.");
+            response.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "챌린지를 찾을 수 없습니다.");
+            errorResponse.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 }

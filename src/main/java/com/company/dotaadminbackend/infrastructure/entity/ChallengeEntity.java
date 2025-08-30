@@ -62,6 +62,10 @@ public class ChallengeEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Rewards (cascade remove ensures deletion when challenge removed)
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<ChallengeRewardEntity> rewards = new ArrayList<>();
+
     protected ChallengeEntity() {}
 
     public ChallengeEntity(String title, String description, Long authorId, 
