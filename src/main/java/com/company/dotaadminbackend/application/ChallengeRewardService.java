@@ -69,20 +69,18 @@ public class ChallengeRewardService {
     private void processReward(ChallengeRewardEntity reward) {
         try {
             switch (reward.getMethod()) {
-                case POINT:
-                    // 포인트 지급 로직 (추후 구현)
-                    // userService.addPoints(reward.getParticipantId(), reward.getAmount());
-                    break;
                 case CASH:
                     // 현금 지급 로직 (추후 구현)
                     // paymentService.processCashReward(reward);
                     break;
+                case ITEM:
+                    // 아이템 지급 로직 (추후 구현)
+                    // itemService.processItemReward(reward);
+                    break;
             }
-            
             // 처리 완료 표시
             reward.markAsProcessed();
             challengeRewardRepository.save(reward);
-            
         } catch (Exception e) {
             throw new RuntimeException("포상 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
