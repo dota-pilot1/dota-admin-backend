@@ -3,8 +3,7 @@ package com.company.dotaadminbackend.domain.challenge;
 public enum ChallengeStatus {
     RECRUITING("모집중"),    // 모집중
     IN_PROGRESS("진행중"),   // 진행중
-    COMPLETED("완료"),       // 완료
-    CANCELLED("취소됨");     // 취소됨
+    COMPLETED("완료");       // 완료
     
     private final String description;
     
