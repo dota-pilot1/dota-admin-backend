@@ -49,14 +49,31 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Dev CORS for Next.js (http://localhost:3000)
+    // CORS 설정 (프론트 도메인 / 서브도메인 허용)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://127.0.0.1:3000", "http://43.201.126.232:3000", "https://dota-task.shop", "https://localhost:3000", "https://127.0.0.1:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+    // 패턴 기반 (서브도메인 포함) - Spring 5.3+/Boot 2.4+ 지원
+    configuration.setAllowedOriginPatterns(List.of(
+        "https://dota-task.shop",
+        "https://api.dota-task.shop",
+        "https://*.dota-task.shop",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://localhost:3000",
+        "https://127.0.0.1:3000"
+    ));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of(
+        "Authorization",
+        "Content-Type",
+        "X-Requested-With",
+        "Accept",
+        "Origin"
+    ));
+    configuration.setExposedHeaders(List.of("Authorization"));
+    configuration.setAllowCredentials(true); // 쿠키/인증 헤더 허용
+    configuration.setMaxAge(3600L); // preflight 캐시 1시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
