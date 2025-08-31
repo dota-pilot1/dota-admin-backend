@@ -43,7 +43,7 @@ public class ChallengeController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{challengeId}")
+    @GetMapping("/{challengeId:[0-9]+}")
     public ResponseEntity<Map<String, Object>> getChallengeEntity(@PathVariable Long challengeId) {
         ChallengeEntity challenge = challengeService.getChallengeById(challengeId)
                 .orElseThrow(() -> new IllegalArgumentException("ChallengeEntity not found with id: " + challengeId));
@@ -95,7 +95,7 @@ public class ChallengeController {
     }
 
     // Participation APIs
-    @PostMapping("/{challengeId}/participate")
+    @PostMapping("/{challengeId:[0-9]+}/participate")
     public ResponseEntity<Map<String, Object>> participateInChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -127,7 +127,7 @@ public class ChallengeController {
         }
     }
 
-    @DeleteMapping("/{challengeId}/participate")
+    @DeleteMapping("/{challengeId:[0-9]+}/participate")
     public ResponseEntity<Map<String, Object>> leaveChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -152,7 +152,7 @@ public class ChallengeController {
         }
     }
 
-    @GetMapping("/{challengeId}/participation-status")
+    @GetMapping("/{challengeId:[0-9]+}/participation-status")
     public ResponseEntity<Map<String, Object>> getParticipationStatus(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -178,7 +178,7 @@ public class ChallengeController {
     }
 
     // Reward info endpoint: returns challenge with participant enriched data for reward UI
-    @GetMapping("/{challengeId}/reward-info")
+    @GetMapping("/{challengeId:[0-9]+}/reward-info")
     public ResponseEntity<Map<String, Object>> getRewardInfo(@PathVariable Long challengeId) {
         ChallengeEntity challenge = challengeService.getChallengeById(challengeId)
                 .orElseThrow(() -> new IllegalArgumentException("ChallengeEntity not found with id: " + challengeId));
@@ -192,7 +192,7 @@ public class ChallengeController {
     }
     
     // 상태 변경 API들
-    @PatchMapping("/{challengeId}/start")
+    @PatchMapping("/{challengeId:[0-9]+}/start")
     public ResponseEntity<Map<String, Object>> startChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -223,7 +223,7 @@ public class ChallengeController {
         }
     }
     
-    @PatchMapping("/{challengeId}/complete")
+    @PatchMapping("/{challengeId:[0-9]+}/complete")
     public ResponseEntity<Map<String, Object>> completeChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -254,7 +254,7 @@ public class ChallengeController {
         }
     }
     
-    @PatchMapping("/{challengeId}/reopen")
+    @PatchMapping("/{challengeId:[0-9]+}/reopen")
     public ResponseEntity<Map<String, Object>> reopenChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         
@@ -285,7 +285,7 @@ public class ChallengeController {
         }
     }
     
-    @PutMapping("/{challengeId}")
+    @PutMapping("/{challengeId:[0-9]+}")
     public ResponseEntity<Map<String, Object>> updateChallenge(
             @PathVariable Long challengeId,
             @Valid @RequestBody UpdateChallengeRequest request) {
@@ -318,7 +318,7 @@ public class ChallengeController {
         }
     }
 
-    @DeleteMapping("/{challengeId}")
+    @DeleteMapping("/{challengeId:[0-9]+}")
     public ResponseEntity<Map<String, Object>> deleteChallenge(@PathVariable Long challengeId) {
         UserEntity currentUser = userService.getCurrentUser();
         try {

@@ -40,4 +40,33 @@ public interface ChallengeRewardRepository extends JpaRepository<ChallengeReward
 
     // 챌린지 삭제 시 연관 포상 삭제
     void deleteByChallenge_Id(Long challengeId); // (현재 cascade 사용으로 호출 필요 없음)
+    
+    // ========================
+    // 포상 통계용 메서드들
+    // ========================
+    
+    // 처리된 포상 개수 조회
+    long countByProcessedTrue();
+    
+    // 전체 포상 금액 합계
+    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM ChallengeRewardEntity r WHERE r.processed = true")
+    Integer getTotalRewardAmount();
+    
+    // 챌린지별 포상 통계 (포상 금액 기준 상위)
+    @Query("SELECT c.id, c.title, COALESCE(SUM(r.amount), 0) as totalAmount, COUNT(r.id) as rewardCount " +
+           "FROM ChallengeRewardEntity r " +
+           "JOIN r.challenge c " +
+           "WHERE r.processed = true " +
+           "GROUP BY c.id, c.title " +
+           "ORDER BY totalAmount DESC")
+    List<Object[]> getTopChallengesByRewardAmount();
+    
+    // 참가자별 포상 통계 (포상 금액 기준 상위)
+    @Query("SELECT r.participantId, u.username, COALESCE(SUM(r.amount), 0) as totalAmount, COUNT(r.id) as rewardCount " +
+           "FROM ChallengeRewardEntity r " +
+           "JOIN UserEntity u ON u.id = r.participantId " +
+           "WHERE r.processed = true " +
+           "GROUP BY r.participantId, u.username " +
+           "ORDER BY totalAmount DESC")
+    List<Object[]> getTopParticipantsByRewardAmount();
 }

@@ -1,1 +1,0 @@
-// 삭제: Spring Data JPA Repository로 대체됨

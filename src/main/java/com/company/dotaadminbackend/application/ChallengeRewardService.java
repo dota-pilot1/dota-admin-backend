@@ -57,14 +57,14 @@ public class ChallengeRewardService {
         // 포상 저장
         ChallengeRewardEntity savedReward = challengeRewardRepository.save(reward);
         
-        // 포상 처리 (포인트 지급 등)
+        // 포상 처리 (현금 지급 등)
         processReward(savedReward);
         
         // 응답 생성 (이름 등 추가 정보 포함)
         return toChallengeRewardResponse(savedReward);
     }
     
-    // 포상 처리 (실제 포인트 지급 등)
+    // 포상 처리 (실제 현금 지급 등)
     private void processReward(ChallengeRewardEntity reward) {
         try {
             switch (reward.getMethod()) {
