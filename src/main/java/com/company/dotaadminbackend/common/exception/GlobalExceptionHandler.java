@@ -65,6 +65,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
+    @ExceptionHandler(io.jsonwebtoken.ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredJwtException(io.jsonwebtoken.ExpiredJwtException ex) {
+        log.warn("[Exception] JWT token expired: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                "JWT token has expired",
+                "TOKEN_EXPIRED");
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
+    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(io.jsonwebtoken.JwtException ex) {
+        log.warn("[Exception] JWT validation failed: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Invalid JWT token",
+                "INVALID_TOKEN");
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("[Exception] Unhandled exception", ex);

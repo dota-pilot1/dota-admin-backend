@@ -73,6 +73,9 @@ public class JwtUtil {
                     .build()
                     .parseSignedClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            System.out.println("JWT token expired: " + e.getMessage());
+            return false; // 만료는 false 반환하고 별도로 체크
         } catch (JwtException | IllegalArgumentException e) {
             System.out.println("JWT validation error: " + e.getMessage());
             return false;
@@ -87,8 +90,10 @@ public class JwtUtil {
                     .parseSignedClaims(token)
                     .getPayload();
             return claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true; // 이미 만료됨
         } catch (JwtException | IllegalArgumentException e) {
-            return true;
+            return true; // 유효하지 않은 토큰은 만료로 간주
         }
     }
 }
