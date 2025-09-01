@@ -54,7 +54,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 패턴 기반 (서브도메인 포함)
+        // 패턴 기반 (서브도메인 포함) - 더 명확한 설정
         configuration.setAllowedOriginPatterns(List.of(
             "https://dota-task.shop",
             "https://*.dota-task.shop",
@@ -64,12 +64,28 @@ public class SecurityConfig {
             "http://localhost:3003",
             "http://127.0.0.1:3000"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        // 모든 헤더 허용 (특히 브라우저 자동 추가 헤더 포함)
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+        
+        // CORS preflight 요청에 대한 명시적 허용
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        
+        // 필요한 헤더들을 명시적으로 허용
+        configuration.setAllowedHeaders(List.of(
+            "Authorization", 
+            "Content-Type", 
+            "Accept", 
+            "Origin", 
+            "User-Agent",
+            "Cache-Control",
+            "X-Requested-With",
+            "If-Modified-Since",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
+        
+        // 응답에 포함할 헤더들
+        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie", "Access-Control-Allow-Origin"));
         configuration.setAllowCredentials(true); // 쿠키/인증 헤더 허용
-        configuration.setMaxAge(3600L); // preflight 캐시 1시간
+        configuration.setMaxAge(7200L); // preflight 캐시 2시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
