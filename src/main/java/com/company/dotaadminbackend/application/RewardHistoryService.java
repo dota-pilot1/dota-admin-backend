@@ -5,7 +5,6 @@ import com.company.dotaadminbackend.domain.reward.RewardType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 @Service
@@ -16,7 +15,7 @@ public class RewardHistoryService {
         // 필수 필드 추출
         Long challengeId = extractLong(rewardData.get("challengeId"));
         Long participantId = extractLong(rewardData.get("participantId"));
-        BigDecimal rewardAmount = extractBigDecimal(rewardData.get("rewardAmount"));
+        Integer rewardAmount = extractInteger(rewardData.get("rewardAmount"));
         String rewardTypeStr = (String) rewardData.get("rewardType");
         
         // 필수 필드 검증
@@ -39,13 +38,13 @@ public class RewardHistoryService {
         return rewardHistory;
     }
     
-    private BigDecimal extractBigDecimal(Object value) {
+    private Integer extractInteger(Object value) {
         if (value == null) return null;
         if (value instanceof Number) {
-            return BigDecimal.valueOf(((Number) value).doubleValue());
+            return ((Number) value).intValue();
         }
         try {
-            return new BigDecimal(value.toString());
+            return Integer.valueOf(value.toString());
         } catch (NumberFormatException e) {
             return null;
         }

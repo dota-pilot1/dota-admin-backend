@@ -2,6 +2,7 @@ package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.ChallengeService;
 import com.company.dotaadminbackend.application.UserService;
+import com.company.dotaadminbackend.application.RewardService;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
@@ -23,10 +24,12 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
     private final UserService userService;
+    private final RewardService rewardService;
 
-    public ChallengeController(ChallengeService challengeService, UserService userService) {
+    public ChallengeController(ChallengeService challengeService, UserService userService, RewardService rewardService) {
         this.challengeService = challengeService;
         this.userService = userService;
+        this.rewardService = rewardService;
     }
 
     @PostMapping
@@ -188,6 +191,28 @@ public class ChallengeController {
         response.put("challenge", challengeService.toChallengeResponse(challenge));
         response.put("participantCount", challenge.getParticipantCount());
         response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.ok(response);
+    }
+
+    // 포상 지급 이력 조회 API (이미 받은 사람 체크용)
+    @GetMapping("/{challengeId:[0-9]+}/reward-histories")
+    public ResponseEntity<Map<String, Object>> getRewardHistories(@PathVariable Long challengeId) {
+        System.out.println("🔍 [DEBUG] getRewardHistories 호출됨 - challengeId: " + challengeId);
+        
+        List<Long> rewardedParticipantIds = rewardService.getRewardedParticipantIds(challengeId);
+        Long rewardedCount = rewardService.getRewardedCount(challengeId);
+        
+        System.out.println("🎁 [DEBUG] rewardedParticipantIds: " + rewardedParticipantIds);
+        System.out.println("📊 [DEBUG] rewardedCount: " + rewardedCount);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("challengeId", challengeId);
+        response.put("rewardedParticipantIds", rewardedParticipantIds);
+        response.put("rewardedCount", rewardedCount);
+        response.put("timestamp", LocalDateTime.now());
+        
+        System.out.println("📤 [DEBUG] 응답: " + response);
         return ResponseEntity.ok(response);
     }
     

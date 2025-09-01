@@ -29,7 +29,7 @@ public class RewardHistoryController {
             response.put("message", "Reward history saved successfully");
             response.put("challengeId", rewardHistory.getChallengeId());
             response.put("participantId", rewardHistory.getParticipantId());
-            response.put("rewardAmount", rewardHistory.getRewardAmount());
+            response.put("rewardAmount", rewardHistory.getAmount());
             response.put("rewardType", rewardHistory.getRewardType().name());
             response.put("timestamp", LocalDateTime.now());
             
