@@ -17,9 +17,9 @@ public class RewardHistoryResponse {
 
     public RewardHistoryResponse() {}
 
-    public RewardHistoryResponse(Long id, Long challengeId, Long participantId, 
+    public RewardHistoryResponse(Long id, Long challengeId, Long participantId,
                                String participantEmail, String participantUsername,
-                               Integer rewardAmount, RewardType rewardType, 
+                               Integer rewardAmount, RewardType rewardType,
                                LocalDateTime createdAt) {
         this.id = id;
         this.challengeId = challengeId;
@@ -36,17 +36,17 @@ public class RewardHistoryResponse {
             rewardHistory.getId(),
             rewardHistory.getChallengeId(),
             rewardHistory.getParticipantId(),
-            null, // will be filled by service layer with user info
+            null, // will be filled by service layer
             null,
             rewardHistory.getAmount(),
             rewardHistory.getRewardType(),
             rewardHistory.getCreatedAt()
         );
     }
-    
+
     public static RewardHistoryResponse fromWithUserInfo(
-        RewardHistory rewardHistory, 
-        String participantEmail, 
+        RewardHistory rewardHistory,
+        String participantEmail,
         String participantUsername
     ) {
         return new RewardHistoryResponse(
