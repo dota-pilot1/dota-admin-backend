@@ -6,12 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.company.dotaadminbackend.application.UserService;
-import com.company.dotaadminbackend.infrastructure.entity.AuthorityEntity;
-import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import com.company.dotaadminbackend.common.dto.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,25 +17,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtUtil jwtUtil;
-    private final ApplicationContext applicationContext;
-    private UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, ApplicationContext applicationContext) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-        this.applicationContext = applicationContext;
-    }
-    
-    private UserService getUserService() {
-        if (userService == null) {
-            userService = applicationContext.getBean(UserService.class);
-        }
-        return userService;
     }
 
     @Override
@@ -64,45 +51,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 토큰 유효성 체크
                 if (!jwtUtil.validateToken(token)) {
                     logger.warn("JWT token invalid");
-                    // 일반 401 - refresh 시도 안함
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
                 
-                String email = jwtUtil.getEmailFromToken(token);
-                logger.debug("JWT parsed successfully - email: {}", email);
-                
+                // 🚀 성능 최적화: 토큰에서 모든 정보를 한번에 추출 (DB 조회 없음!)
                 try {
-                    UserService userSvc = getUserService();
-                    UserEntity user = userSvc.findByEmail(email).orElse(null);
+                    JwtUtil.TokenInfo tokenInfo = jwtUtil.getTokenInfo(token);
+                    String email = tokenInfo.getEmail();
+                    String role = tokenInfo.getRole();
+                    List<String> authorities = tokenInfo.getAuthorities();
                     
-                    if (user != null) {
-                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                        
-                        // DB에서 가져온 실제 Role 사용
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
-                        
-                        // AuthorityEntity 기반 권한 추가 (DB에서 실시간 조회)
-                        List<AuthorityEntity> userAuthorities = userSvc.getUserAuthorities(user.getId());
-                        for (AuthorityEntity authority : userAuthorities) {
-                            authorities.add(new SimpleGrantedAuthority(authority.getName()));
-                        }
-                        
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            email, null, authorities
-                        );
-                        
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-                        logger.debug("Authentication set in SecurityContext for user: {} with role: {} and {} authorities", 
-                                   email, user.getRole().getName(), authorities.size());
-                    } else {
-                        logger.warn("UserEntity not found in database: {}", email);
-                        // 일반 401 - refresh 시도 안함
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        return;
+                    logger.debug("JWT parsed successfully - email: {}, role: {}", email, role);
+                    
+                    // Spring Security 권한 목록 생성
+                    List<SimpleGrantedAuthority> grantedAuthorities = new ArrayList<>();
+                    
+                    // Role 권한 추가 (ROLE_ 접두사 포함)
+                    if (role != null && !role.isEmpty()) {
+                        grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                     }
+                    
+                    // Authority 권한들 추가 (토큰에서 가져온 것)
+                    if (authorities != null && !authorities.isEmpty()) {
+                        for (String authority : authorities) {
+                            grantedAuthorities.add(new SimpleGrantedAuthority(authority));
+                        }
+                    }
+                    
+                    // SecurityContext에 인증 정보 설정
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        email, null, grantedAuthorities
+                    );
+                    
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    logger.debug("Authentication set from token for user: {} with role: {} and {} authorities", 
+                               email, role, grantedAuthorities.size());
+                    
                 } catch (Exception e) {
-                    logger.error("Error loading user from database: {}", e.getMessage());
+                    logger.error("Error parsing JWT token: {}", e.getMessage());
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }

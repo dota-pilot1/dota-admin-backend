@@ -1,10 +1,10 @@
 package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.RoleService;
-import com.company.dotaadminbackend.domain.model.Role;
-import com.company.dotaadminbackend.domain.role.dto.CreateRoleRequest;
-import com.company.dotaadminbackend.domain.role.dto.RoleResponse;
-import com.company.dotaadminbackend.domain.role.dto.UpdateRoleRequest;
+import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
+import com.company.dotaadminbackend.infrastructure.dto.CreateRoleRequest;
+import com.company.dotaadminbackend.infrastructure.dto.RoleResponse;
+import com.company.dotaadminbackend.infrastructure.dto.UpdateRoleRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,20 +28,20 @@ public class RoleController {
 
     @GetMapping
     public ResponseEntity<List<RoleResponse>> getAllRoles() {
-    log.debug("[RoleController] Fetching all roles");
-    long started = System.currentTimeMillis();
-    List<Role> roles = roleService.getAllRoles();
-    List<RoleResponse> responses = roles.stream()
-        .map(RoleResponse::from)
-        .collect(Collectors.toList());
-    log.debug("[RoleController] Retrieved {} roles in {} ms", responses.size(), System.currentTimeMillis()-started);
-    return ResponseEntity.ok(responses);
+        log.debug("[RoleController] Fetching all roles");
+        long started = System.currentTimeMillis();
+        List<RoleEntity> roles = roleService.getAllRoles();
+        List<RoleResponse> responses = roles.stream()
+            .map(RoleResponse::from)
+            .collect(Collectors.toList());
+        log.debug("[RoleController] Retrieved {} roles in {} ms", responses.size(), System.currentTimeMillis()-started);
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getRoleById(@PathVariable Long id) {
         try {
-            Role role = roleService.getRoleById(id);
+            RoleEntity role = roleService.getRoleById(id);
             log.debug("[RoleController] Found role id={} name={}", role.getId(), role.getName());
             return ResponseEntity.ok(RoleResponse.from(role));
         } catch (RuntimeException e) {
@@ -53,7 +53,7 @@ public class RoleController {
     @PostMapping
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody CreateRoleRequest request) {
         try {
-            Role role = roleService.createRole(request);
+            RoleEntity role = roleService.createRole(request);
             log.info("[RoleController] Created role id={} name={}", role.getId(), role.getName());
             return ResponseEntity.status(HttpStatus.CREATED).body(RoleResponse.from(role));
         } catch (RuntimeException e) {
@@ -67,7 +67,7 @@ public class RoleController {
             @PathVariable Long id, 
             @Valid @RequestBody UpdateRoleRequest request) {
         try {
-            Role role = roleService.updateRole(id, request);
+            RoleEntity role = roleService.updateRole(id, request);
             log.info("[RoleController] Updated role id={} newName={}", id, request.getName());
             return ResponseEntity.ok(RoleResponse.from(role));
         } catch (RuntimeException e) {

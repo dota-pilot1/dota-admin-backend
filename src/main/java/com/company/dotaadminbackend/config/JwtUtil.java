@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -21,13 +22,28 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
+    // 새로운 토큰 생성 메서드 - 사용자 정보와 권한들 모두 포함
+    public String generateToken(String email, String roleName, List<String> authorities) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("role", roleName)
+                .claim("authorities", authorities)  // 모든 권한 정보를 토큰에 포함
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+    
+    // 호환성을 위한 기존 메서드 (권한 정보 없이)
     public String generateToken(String email, String roleName) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(email)
-                // role claim은 호환성을 위해 유지하지만 실제로는 사용하지 않음
                 .claim("role", roleName)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -64,6 +80,48 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload();
         return claims.get("role", String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getAuthoritiesFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return (List<String>) claims.get("authorities");
+    }
+    
+    // 토큰에서 모든 정보를 한번에 추출하는 메서드 (성능 최적화)
+    public TokenInfo getTokenInfo(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        
+        return new TokenInfo(
+            claims.getSubject(), // email
+            claims.get("role", String.class), // role
+            (List<String>) claims.get("authorities") // authorities
+        );
+    }
+    
+    // 토큰 정보를 담는 내부 클래스
+    public static class TokenInfo {
+        private final String email;
+        private final String role;
+        private final List<String> authorities;
+        
+        public TokenInfo(String email, String role, List<String> authorities) {
+            this.email = email;
+            this.role = role;
+            this.authorities = authorities;
+        }
+        
+        public String getEmail() { return email; }
+        public String getRole() { return role; }
+        public List<String> getAuthorities() { return authorities; }
     }
 
     public boolean validateToken(String token) {

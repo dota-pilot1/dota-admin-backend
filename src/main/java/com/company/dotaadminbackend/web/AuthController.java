@@ -134,13 +134,14 @@ public class AuthController {
 
         logger.info("로그인 성공 - 사용자: {}", user.getEmail());
 
-        // 사용자의 모든 권한 조회
+        // 🚀 사용자의 모든 권한 조회 (로그인 시 1회만)
         List<AuthorityEntity> userAuthorities = userService.getUserAuthorities(user.getId());
         List<String> authorityNames = userAuthorities.stream()
                 .map(AuthorityEntity::getName)
                 .toList();
 
-    String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
+        // 🎯 권한 정보를 포함한 토큰 생성
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName(), authorityNames);
     RefreshTokenService.GeneratedToken refresh = refreshTokenService.create(user, httpRequest.getRemoteAddr(), userAgent);
     
     // 로그 추가
@@ -241,7 +242,13 @@ public class AuthController {
         );
         response.addHeader("Set-Cookie", cookieHeader);
         
-        String access = jwtUtil.generateToken(oldToken.getUser().getEmail(), oldToken.getUser().getRole().getName());
+        // 🚀 사용자의 모든 권한 조회 (refresh 시에도 최신 권한 반영)
+        List<AuthorityEntity> userAuthorities = userService.getUserAuthorities(oldToken.getUser().getId());
+        List<String> authorityNames = userAuthorities.stream()
+                .map(AuthorityEntity::getName)
+                .toList();
+        
+        String access = jwtUtil.generateToken(oldToken.getUser().getEmail(), oldToken.getUser().getRole().getName(), authorityNames);
         logger.info("Refresh token rotated successfully with header: {}",
             cookieHeader.substring(0, Math.min(50, cookieHeader.length())) + "...");
         return ResponseEntity.ok(Map.of("accessToken", access, "expiresIn", 300));

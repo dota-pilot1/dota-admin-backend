@@ -2,8 +2,8 @@ package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.ChallengeRewardService;
 import com.company.dotaadminbackend.application.UserService;
-import com.company.dotaadminbackend.domain.reward.dto.CreateChallengeRewardRequest;
-import com.company.dotaadminbackend.domain.reward.dto.ChallengeRewardResponse;
+import com.company.dotaadminbackend.infrastructure.dto.CreateChallengeRewardRequest;
+import com.company.dotaadminbackend.infrastructure.dto.ChallengeRewardResponse;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

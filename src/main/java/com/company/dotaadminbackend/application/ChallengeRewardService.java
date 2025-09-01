@@ -1,7 +1,7 @@
 package com.company.dotaadminbackend.application;
 
-import com.company.dotaadminbackend.domain.reward.dto.CreateChallengeRewardRequest;
-import com.company.dotaadminbackend.domain.reward.dto.ChallengeRewardResponse;
+import com.company.dotaadminbackend.infrastructure.dto.CreateChallengeRewardRequest;
+import com.company.dotaadminbackend.infrastructure.dto.ChallengeRewardResponse;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeRewardEntity;
 import com.company.dotaadminbackend.infrastructure.entity.ChallengeEntity;
 import com.company.dotaadminbackend.infrastructure.repository.ChallengeRewardRepository;

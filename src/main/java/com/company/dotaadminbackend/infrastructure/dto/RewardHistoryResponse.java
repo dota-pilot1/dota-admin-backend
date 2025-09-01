@@ -1,4 +1,4 @@
-package com.company.dotaadminbackend.domain.reward.dto;
+package com.company.dotaadminbackend.infrastructure.dto;
 
 import com.company.dotaadminbackend.domain.reward.RewardHistory;
 import com.company.dotaadminbackend.domain.reward.RewardType;

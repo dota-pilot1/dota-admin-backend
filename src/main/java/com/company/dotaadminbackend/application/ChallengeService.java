@@ -6,10 +6,10 @@ import com.company.dotaadminbackend.domain.challenge.ChallengeStatus;
 import com.company.dotaadminbackend.infrastructure.adapter.ChallengeRepository;
 import com.company.dotaadminbackend.infrastructure.adapter.SpringDataUserRepository;
 import com.company.dotaadminbackend.infrastructure.repository.ChallengeRewardRepository;
-import com.company.dotaadminbackend.domain.challenge.dto.CreateChallengeRequest;
-import com.company.dotaadminbackend.domain.challenge.dto.UpdateChallengeRequest;
-import com.company.dotaadminbackend.domain.challenge.dto.ChallengeResponse;
-import com.company.dotaadminbackend.domain.challenge.dto.ParticipantResponse;
+import com.company.dotaadminbackend.infrastructure.dto.CreateChallengeRequest;
+import com.company.dotaadminbackend.infrastructure.dto.UpdateChallengeRequest;
+import com.company.dotaadminbackend.infrastructure.dto.ChallengeResponse;
+import com.company.dotaadminbackend.infrastructure.dto.ParticipantResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

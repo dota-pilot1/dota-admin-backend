@@ -1,4 +1,4 @@
-package com.company.dotaadminbackend.domain.challenge.dto;
+package com.company.dotaadminbackend.infrastructure.dto;
 
 import com.company.dotaadminbackend.domain.reward.RewardType;
 import jakarta.validation.constraints.*;

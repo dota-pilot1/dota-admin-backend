@@ -1,4 +1,4 @@
-package com.company.dotaadminbackend.domain.role.dto;
+package com.company.dotaadminbackend.infrastructure.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateRoleRequest {
+public class UpdateRoleRequest {
     
     @NotBlank(message = "Role name is required")
     @Size(max = 50, message = "Role name must be less than 50 characters")

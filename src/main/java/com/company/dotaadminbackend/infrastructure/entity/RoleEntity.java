@@ -17,4 +17,26 @@ public class RoleEntity {
 
     @Column(length = 255)
     private String description;
+
+    // 비즈니스 로직 메서드
+    public boolean isAdmin() {
+        return "ADMIN".equals(this.name);
+    }
+
+    public boolean isUser() {
+        return "USER".equals(this.name);
+    }
+
+    public boolean isDeveloper() {
+        return "DEVELOPER".equals(this.name);
+    }
+
+    public void updateDetails(String newName, String newDescription) {
+        if (newName != null && !newName.trim().isEmpty()) {
+            this.name = newName.trim().toUpperCase();
+        }
+        if (newDescription != null) {
+            this.description = newDescription.trim();
+        }
+    }
 }

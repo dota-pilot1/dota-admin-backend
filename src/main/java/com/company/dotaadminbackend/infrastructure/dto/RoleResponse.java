@@ -1,6 +1,6 @@
-package com.company.dotaadminbackend.domain.role.dto;
+package com.company.dotaadminbackend.infrastructure.dto;
 
-import com.company.dotaadminbackend.domain.model.Role;
+import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -14,11 +14,11 @@ public class RoleResponse {
     private String name;
     private String description;
     
-    public static RoleResponse from(Role role) {
+    public static RoleResponse from(RoleEntity roleEntity) {
         return new RoleResponse(
-            role.getId(),
-            role.getName(),
-            role.getDescription()
+            roleEntity.getId(),
+            roleEntity.getName(),
+            roleEntity.getDescription()
         );
     }
 }

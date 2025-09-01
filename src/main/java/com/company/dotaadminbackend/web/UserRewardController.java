@@ -2,7 +2,7 @@ package com.company.dotaadminbackend.web;
 
 import com.company.dotaadminbackend.application.ChallengeRewardService;
 import com.company.dotaadminbackend.application.UserService;
-import com.company.dotaadminbackend.domain.reward.dto.ChallengeRewardResponse;
+import com.company.dotaadminbackend.infrastructure.dto.ChallengeRewardResponse;
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,8 +1,7 @@
 package com.company.dotaadminbackend.application;
 
-import com.company.dotaadminbackend.domain.model.Role;
-import com.company.dotaadminbackend.domain.role.dto.CreateRoleRequest;
-import com.company.dotaadminbackend.domain.role.dto.UpdateRoleRequest;
+import com.company.dotaadminbackend.infrastructure.dto.CreateRoleRequest;
+import com.company.dotaadminbackend.infrastructure.dto.UpdateRoleRequest;
 import com.company.dotaadminbackend.infrastructure.adapter.RoleRepository;
 import com.company.dotaadminbackend.infrastructure.entity.RoleEntity;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 // RoleService
 // ------------------------------------------------------------------
@@ -33,25 +31,22 @@ public class RoleService {
     }
 
     @Transactional(readOnly = true)
-    public List<Role> getAllRoles() {
-    log.debug("[RoleService] Fetching all roles from repository");
-    List<Role> list = roleRepository.findAll()
-                .stream()
-                .map(this::toRole)
-                .collect(Collectors.toList());
-    log.debug("[RoleService] Fetched {} roles", list.size());
-    return list;
+    public List<RoleEntity> getAllRoles() {
+        log.debug("[RoleService] Fetching all roles from repository");
+        List<RoleEntity> list = roleRepository.findAll();
+        log.debug("[RoleService] Fetched {} roles", list.size());
+        return list;
     }
 
     @Transactional(readOnly = true)
-    public Role getRoleById(Long id) {
+    public RoleEntity getRoleById(Long id) {
         RoleEntity entity = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
-    log.debug("[RoleService] Found role id={}", id);
-        return toRole(entity);
+        log.debug("[RoleService] Found role id={}", id);
+        return entity;
     }
 
-    public Role createRole(CreateRoleRequest request) {
+    public RoleEntity createRole(CreateRoleRequest request) {
         // Only validates uniqueness and persists. Seeding & fallbacks live elsewhere.
         if (roleRepository.existsByName(request.getName())) {
             String msg = "Role with name '" + request.getName() + "' already exists";
@@ -65,10 +60,10 @@ public class RoleService {
 
         RoleEntity savedEntity = roleRepository.save(entity);
         log.debug("[RoleService] Created role id={}", savedEntity.getId());
-        return toRole(savedEntity);
+        return savedEntity;
     }
 
-    public Role updateRole(Long id, UpdateRoleRequest request) {
+    public RoleEntity updateRole(Long id, UpdateRoleRequest request) {
         RoleEntity entity = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
 
@@ -82,9 +77,9 @@ public class RoleService {
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
         
-    RoleEntity savedEntity = roleRepository.save(entity);
-    log.debug("[RoleService] Updated role id={}", savedEntity.getId());
-    return toRole(savedEntity);
+        RoleEntity savedEntity = roleRepository.save(entity);
+        log.debug("[RoleService] Updated role id={}", savedEntity.getId());
+        return savedEntity;
     }
 
     public void deleteRole(Long id) {
@@ -97,11 +92,4 @@ public class RoleService {
         log.debug("[RoleService] Deleted role id={}", id);
     }
 
-    private Role toRole(RoleEntity entity) {
-        return new Role(
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription()
-        );
-    }
 }

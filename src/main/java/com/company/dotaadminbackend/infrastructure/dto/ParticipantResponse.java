@@ -1,4 +1,4 @@
-package com.company.dotaadminbackend.domain.challenge.dto;
+package com.company.dotaadminbackend.infrastructure.dto;
 
 import com.company.dotaadminbackend.infrastructure.entity.UserEntity;
 import lombok.Data;
