@@ -63,17 +63,8 @@ public class SecurityConfig {
         "http://localhost:3002",
         "http://localhost:3003",
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "http://127.0.0.1:3002",
-        "http://127.0.0.1:3003",
         "https://localhost:3000",
-        "https://localhost:3001",
-        "https://localhost:3002",
-        "https://localhost:3003",
-        "https://127.0.0.1:3000",
-        "https://127.0.0.1:3001",
-        "https://127.0.0.1:3002",
-        "https://127.0.0.1:3003"
+        "https://127.0.0.1:3000"
     ));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of(
