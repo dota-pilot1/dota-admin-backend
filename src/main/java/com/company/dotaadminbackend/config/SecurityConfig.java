@@ -42,6 +42,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/ws/**", "/ws-sockjs/**").permitAll() // WebSocket 엔드포인트 허용
+                .requestMatchers("/api/auth/**").permitAll() // 인증 API 허용
                 .anyRequest().permitAll())
             .exceptionHandling(exceptions -> exceptions
                 .accessDeniedHandler(accessDeniedHandler)

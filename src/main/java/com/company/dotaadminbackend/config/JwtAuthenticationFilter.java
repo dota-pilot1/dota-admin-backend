@@ -33,6 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
         
+        // WebSocket 업그레이드 요청은 JWT 필터 건너뛰기
+        String uri = request.getRequestURI();
+        String upgrade = request.getHeader("Upgrade");
+        if ((uri.startsWith("/ws") || uri.startsWith("/ws-sockjs")) && "websocket".equalsIgnoreCase(upgrade)) {
+            logger.debug("Skipping JWT filter for WebSocket upgrade request: {}", uri);
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = request.getHeader("Authorization");
         logger.debug("Authorization header: {}", authHeader);
         
