@@ -16,11 +16,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker // WebSocket 메시지 브로커 활성화
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketAuthHandshakeInterceptor authHandshakeInterceptor;
+    private final WebSocketHandshakeInterceptor webSocketHandshakeInterceptor;
 
     @Autowired
-    public WebSocketConfig(WebSocketAuthHandshakeInterceptor authHandshakeInterceptor) {
-        this.authHandshakeInterceptor = authHandshakeInterceptor;
+    public WebSocketConfig(WebSocketHandshakeInterceptor webSocketHandshakeInterceptor) {
+        this.webSocketHandshakeInterceptor = webSocketHandshakeInterceptor;
     }
 
     /**
@@ -47,7 +47,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/ws") // WebSocket 연결 엔드포인트: ws://localhost:8080/ws
-        .addInterceptors(authHandshakeInterceptor)
+        .addInterceptors(webSocketHandshakeInterceptor)
         .setAllowedOriginPatterns("*"); // CORS 설정: 모든 도메인 허용
     }
 }

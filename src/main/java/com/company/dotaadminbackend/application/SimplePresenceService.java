@@ -21,24 +21,28 @@ public class SimplePresenceService {
 
     /**
      * 사용자 연결 처리
+     * @return 새로운 사용자인 경우 true
      */
-    public void onConnect(String sessionId, String userId) {
+    public boolean onConnect(String sessionId, String userId) {
         sessionUserMap.put(sessionId, userId);
         boolean wasAdded = onlineUsers.add(userId);
         
         if (wasAdded) {
             log.info("User online: {}", userId);
+            return true; // 새로운 사용자
         } else {
             log.debug("User session added but already online: {}", userId);
+            return false; // 기존 사용자의 추가 세션
         }
     }
 
     /**
      * 사용자 연결 해제 처리
+     * @return 완전히 오프라인된 사용자 ID (없으면 null)
      */
-    public void onDisconnect(String sessionId) {
+    public String onDisconnect(String sessionId) {
         String userId = sessionUserMap.remove(sessionId);
-        if (userId == null) return;
+        if (userId == null) return null;
 
         // 해당 사용자의 다른 세션이 남아있는지 확인
         boolean stillHasSession = sessionUserMap.containsValue(userId);
@@ -48,8 +52,11 @@ public class SimplePresenceService {
             boolean wasRemoved = onlineUsers.remove(userId);
             if (wasRemoved) {
                 log.info("User offline: {}", userId);
+                return userId; // 완전히 오프라인된 사용자
             }
         }
+        
+        return null; // 아직 다른 세션이 있어서 온라인 상태 유지
     }
 
     /**
