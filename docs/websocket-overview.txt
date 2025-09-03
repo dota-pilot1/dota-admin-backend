@@ -1,0 +1,76 @@
+웹소켓/STOMP 구성 개요
+--------------------------------
+
+목표
+- 실시간 접속 현황(Presence)과 활동(Activity)을 브로드캐스트/조회
+- STOMP 기반 서버<->클라이언트 양방향 메시징
+
+핵심 엔드포인트 및 Destinations
+- WebSocket STOMP 엔드포인트: /ws (SockJS 지원, 모든 Origin 허용)
+- 서버 수신(Application prefix): /app
+  - 클라이언트 발신 예시: /app/presence/connect, /app/presence/activity
+- 서버 발신(Simple Broker): /topic, /queue
+  - 브로드캐스트: /topic/presence
+  - 사용자별: /user/queue/presence (컨트롤러 @SendToUser 응답)
+
+클래스 구조
+- WebSocketConfig
+  - enableSimpleBroker("/topic", "/queue")
+  - setApplicationDestinationPrefixes("/app")
+  - registerStompEndpoints("/ws").withSockJS()
+
+- PresenceController (/api)
+  - @MessageMapping("/presence/connect") → @SendToUser("/queue/presence")
+    - Principal/세션 정보를 읽어 PresenceService.userConnected(userId, sessionId)
+    - "Connected successfully" 문자열을 해당 사용자 큐에 응답
+  - @MessageMapping("/presence/activity")
+    - payload {"activity": string} 수신 시 PresenceService.updateUserActivity(userId, activity)
+  - @GetMapping("/presence") → 전체 Presence 맵 반환
+    - Map<String, PresenceService.UserPresence> (현재 온라인 사용자 기준)
+
+- WebSocketEventListener
+  - SessionConnectedEvent 처리
+    - Principal가 존재하면 PresenceService.userConnected(userId, sessionId)
+  - SessionDisconnectEvent 처리
+    - Principal가 존재하면 PresenceService.userDisconnected(userId, sessionId)
+
+- PresenceService (애플리케이션 서비스)
+  - 저장소: Redis + In-memory
+    - Redis Set: presence:online (온라인 사용자 집합)
+    - Redis Value: presence:lastSeen:<userId> (epochMillis)
+    - Redis Value: presence:lastActivity:<userId> (문자열 활동 타입)
+    - In-memory Map: sessionUserMap (sessionId -> userId)
+  - 연결/해제
+    - onConnect(sessionId, userId): online 추가, lastSeen 갱신, 필요 시 브로드캐스트(joined)
+    - onDisconnect(sessionId): 남은 세션 없으면 online 제거 및 브로드캐스트(left)
+    - 래퍼: userConnected(userId, sessionId) / userDisconnected(userId, sessionId)
+  - 활동 업데이트
+    - updateUserActivity(userId): lastSeen 갱신
+    - updateUserActivity(userId, activity): lastSeen + lastActivity 저장
+  - 브로드캐스트
+    - convertAndSend("/topic/presence", payload)
+    - payload: {
+        type: "PRESENCE_UPDATE",
+        joined: Set<String>,
+        left: Set<String>,
+        online: Set<String>
+      }
+  - 정리 작업(@Scheduled, 60초 간격)
+    - 60초 이상 활동 없는 사용자 stale 처리 → online 제거 및 브로드캐스트(left)
+  - 조회
+    - getOnlineUsers(): Set<String>
+    - getAllPresences(): Map<String, UserPresence> (온라인 사용자만 포함)
+      - UserPresence { online: true, lastSeen: Long?, lastActivity: String? }
+
+클라이언트 연동 예시(개념)
+1) 연결: STOMP로 /ws 접속 후, /topic/presence 구독
+2) 접속 통지: (옵션) /app/presence/connect 전송 → /user/queue/presence 로 연결 성공 메시지 수신
+3) 활동 핑: /app/presence/activity 로 { "activity": "typing" } 등 주기 전송
+4) 상태 수신: /topic/presence 에서 PRESENCE_UPDATE 이벤트 수신(joined/left/online)
+5) 초기 로드: REST GET /api/presence 로 현재 온라인 사용자 상세 조회
+
+주의/확장 포인트
+- 중복 접속 처리: 동일 userId의 복수 세션을 sessionUserMap으로 감지하여 마지막 세션 해제 시에만 offline 처리
+- 다중 인스턴스: sessionUserMap은 인메모리이므로 Redis Hash 등으로 확장 고려
+- 오프라인 사용자 포함 조회: 별도의 "known users" 세트 유지 시 offline=false 포함한 전체 뷰 제공 가능
+- 보안: Principal 제공을 전제로 동작. 인증/인가 전략에 맞춘 StompChannelInterceptor 적용 검토
