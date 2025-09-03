@@ -33,6 +33,11 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	// Use Spring MVC (servlet) instead of WebFlux to match SecurityFilterChain (HttpSecurity)
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework:spring-messaging")
+	// Redis (PresenceService 등 StringRedisTemplate 사용)
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	// WebSocket STOMP support
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	// Lombok
