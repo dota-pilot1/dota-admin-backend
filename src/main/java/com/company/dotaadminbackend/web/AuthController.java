@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {
+@CrossOrigin(originPatterns = {
     "https://dota-task.shop",
     "https://*.dota-task.shop", 
     "http://localhost:3000",
