@@ -46,9 +46,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws") // WebSocket 연결 엔드포인트: ws://localhost:8080/ws
-        .addInterceptors(webSocketHandshakeInterceptor)
-        .setAllowedOriginPatterns("*") // CORS 설정: 모든 도메인 허용
-        .withSockJS(); // EC2/프록시 환경 호환성을 위해 SockJS 폴백 추가
+        // 순수 WebSocket 엔드포인트 (프론트엔드에서 사용)
+        registry.addEndpoint("/ws")
+            .addInterceptors(webSocketHandshakeInterceptor)
+            .setAllowedOriginPatterns("*");
+            
+        // SockJS 폴백 엔드포인트 (프록시/방화벽 환경용)
+        registry.addEndpoint("/ws-sockjs")
+            .addInterceptors(webSocketHandshakeInterceptor)
+            .setAllowedOriginPatterns("*")
+            .withSockJS();
     }
 }
